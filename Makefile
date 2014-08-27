@@ -1,14 +1,11 @@
 
-MEMSTAT_SRC = $(wildcard *.cpp)
-MEMSTAT_HDR = $(wildcard *.hpp) $(wildcard *.h)
-MEMSTAT_OBJ = $(MEMSTAT_SRC:.cpp=.o)
+SRC = $(wildcard *.cpp)
+HDR = $(wildcard *.hpp)
+OBJ = $(SRC:.cpp=.o)
 
-TARGETS = memstat foo
+EXE = overhead
 
 CPPFLAGS =
-
-CC = tau_cc.sh
-CFLAGS = -g
 
 CXX = g++
 CXXFLAGS = -g
@@ -19,19 +16,20 @@ LIBS = -lrt
 
 
 
-.PHONY: all clean
+.PHONY: all clean tests
 
-all: $(TARGETS)
+all: $(EXE) tests
+
+tests:
+	$(MAKE) -C tests
 
 clean:
-	@rm -fv $(TARGETS) *.o
+	@rm -fv $(EXE) $(OBJ)
+	$(MAKE) -C tests clean
 
-memstat: $(MEMSTAT_OBJ)
-	$(LD) -o memstat $(MEMSTAT_OBJ) $(LDFLAGS) $(LIBS)
+$(EXE): $(OBJ)
+	$(LD) -o $(EXE) $(OBJ) $(LDFLAGS) $(LIBS)
 
-foo: foo.c
-	$(CC) foo.c -o foo
-
-%.o: %.cpp $(MEMSTAT_HDR) Makefile
+%.o: %.cpp $(HDR) Makefile
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
