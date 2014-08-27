@@ -41,11 +41,13 @@ int ForkExecChild::Create(int argc, char ** argv)
     }
     return retval_;
   } else {
+    // Nasty hack: Skip the first sample
+    usleep(freq_);
+
     // Parent process waits for child to complete
     ActivateProbes();
     while (true) {
       Measure();
-
       int status;
       int code = waitpid(pid_, &status, WNOHANG);
       if (code == pid_) {
