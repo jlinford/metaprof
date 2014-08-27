@@ -13,6 +13,14 @@ public:
   int Create(int argc, char ** argv);
 
   virtual void ReportToCSVFile(char const * tag=NULL);
+
+private:
+
+  // Time of child process creation
+  timeval start_time_;
+
+  // Time parent process saw child process termination
+  timeval end_time_;
 };
 
 

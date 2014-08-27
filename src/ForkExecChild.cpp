@@ -23,7 +23,11 @@ using namespace std;
 // 
 int ForkExecChild::Create(int argc, char ** argv)
 {
+  // Record name of child executable as seen on command line
   exe_name_ = argv[1];
+
+  // Mark time of child process creation
+  gettimeofday(&start_time_, NULL);
 
   pid_ = fork();
   if (pid_ == -1) {
@@ -63,6 +67,8 @@ int ForkExecChild::Create(int argc, char ** argv)
         usleep(freq_);
       }
     }
+    // Mark time of child process completion
+    gettimeofday(&end_time_, NULL);
     DeactivateProbes();
     return retval_;
   }
@@ -82,11 +88,29 @@ void ForkExecChild::ReportToCSVFile(char const * tag)
   }
   buff << "csv";
 
+  timeval diff;
+  timersub(&end_time_, &start_time_, &diff);
+  double runtime = (diff.tv_sec * 1e6 + diff.tv_usec) / 1e6;
+
+  // Open CSV file for write
   ofstream os(buff.str().c_str());
+
+  // Write summary
+  os << "Executable,Runtime (s)," << endl;
+  os << exe_name_ << ',';
+  os << runtime << ',';
+  os << endl;
+
+  // Separate summary from probe table by an empty field
+  os << ',' << endl;
+
+  // Write probe tables
   for(ProbeVector::const_iterator it=probes_.begin(); it!=probes_.end(); it++) {
     (*it)->WriteDeliminated(os);
     os << endl;
   }
+
+  // Flush and close file
   os.close();
 }
 

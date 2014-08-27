@@ -8,9 +8,7 @@
 
 using namespace std;
 
-static int const FIELD_COUNT = 15;
-
-static char const * FIELD_NAMES[FIELD_COUNT] = 
+static char const * SAMPLE_FIELD_NAMES[] = 
 {
   "Timestamp (s)",
   "VMemory Size (kb)",
@@ -20,6 +18,8 @@ static char const * FIELD_NAMES[FIELD_COUNT] =
   "User Time (s)",
   "System Time (s)",
   "Aggregated I/O Delay Time (s)",
+  "Code Size (b)",
+  "Data Size (b)",
   "Threads",
   "Processor",
   "State",
@@ -27,6 +27,7 @@ static char const * FIELD_NAMES[FIELD_COUNT] =
   "Child Major Faults",
   "Child User Time (s)",
   "Child System Time (s)",
+  NULL
 };
 
 void ProcStatProbe::Measure()
@@ -42,21 +43,24 @@ ostream & ProcStatProbe::WriteDeliminated(std::ostream & os, char const d) const
   static long const PAGE_SIZE = sysconf(_SC_CLK_TCK);
   static long const TICKS_PER_SECOND = sysconf(_SC_CLK_TCK);
 
+  unsigned long code_size = initial_stat_.endcode - initial_stat_.startcode;
+  unsigned long data_size = initial_stat_.end_data - initial_stat_.start_data;
+
   // Write column headers
-  for (int i=0; i<FIELD_COUNT-1; ++i) {
-    os << FIELD_NAMES[i] << d;
+  for (char const ** p=SAMPLE_FIELD_NAMES; *p; ++p) {
+    os << *p << d;
   }
-  os << FIELD_NAMES[FIELD_COUNT-1] << endl;
+  os << endl;
 
   // Write column data
-  // NOTE: Must match order of FIELD_NAMES above!
+  // NOTE: Must match order of SAMPLE_FIELD_NAMES above!
   for (SampleVector::const_iterator it=samples_.begin(); it != samples_.end(); it++) {
     ProcStatSample const & s = *(ProcStatSample*)(*it);
 
     // Timestamp in seconds since first measurement
-    timeval adjusted;
-    timersub(&s.timestamp, &t0_, &adjusted);
-    double ts = (adjusted.tv_sec * 1e6 + adjusted.tv_usec) / 1e6;
+    timeval diff;
+    timersub(&s.timestamp, &t0_, &diff);
+    double ts = (diff.tv_sec * 1e6 + diff.tv_usec) / 1e6;
 
     os << ts << d;
     os << (s.vsize / 1024) << d;
@@ -66,13 +70,16 @@ ostream & ProcStatProbe::WriteDeliminated(std::ostream & os, char const d) const
     os << (s.utime * TICKS_PER_SECOND) << d;
     os << (s.stime * TICKS_PER_SECOND) << d;
     os << (s.delayacct_blkio_ticks * TICKS_PER_SECOND) << d;
+    os << code_size << d;
+    os << data_size << d;
     os << s.num_threads << d;
     os << s.processor << d;
     os << s.state << d;
     os << s.cminflt << d;
     os << s.cmajflt << d;
     os << (s.cutime * TICKS_PER_SECOND) << d;
-    os << (s.cstime * TICKS_PER_SECOND) << endl;
+    os << (s.cstime * TICKS_PER_SECOND) << d;
+    os << endl;
   }
     
   return os;

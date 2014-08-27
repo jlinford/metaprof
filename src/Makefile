@@ -3,7 +3,7 @@ SRC = $(wildcard *.cpp)
 HDR = $(wildcard *.hpp)
 OBJ = $(SRC:.cpp=.o)
 
-EXE = overhead
+EXE = quantify
 
 CPPFLAGS =
 
