@@ -76,7 +76,7 @@ int main(int argc, char ** argv)
     cerr << "Failed to fork child process" << endl;
     exit(EXIT_FAILURE);
   } else if (pid == 0) {
-    retval = child_main(argv[1], argv+2);
+    retval = child_main(argv[1], argv+1);
   } else {
     retval = parent_main(pid);
   }
