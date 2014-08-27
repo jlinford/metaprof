@@ -16,12 +16,14 @@ LIBS =
 
 
 
-.PHONY: all clean tests
+.PHONY: all clean realclean
 
 all: $(EXE)
 
 clean:
 	@rm -fv $(EXE) $(OBJ)
+
+realclean: clean
 
 $(EXE): $(OBJ)
 	$(LD) -o $(EXE) $(OBJ) $(LDFLAGS) $(LIBS)

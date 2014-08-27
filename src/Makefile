@@ -8,7 +8,7 @@ EXE = overhead
 CPPFLAGS =
 
 CXX = g++
-CXXFLAGS = -g
+CXXFLAGS = -g -Wall
 
 LD = $(CXX)
 LDFLAGS =
@@ -16,7 +16,7 @@ LIBS = -lrt
 
 
 
-.PHONY: all clean
+.PHONY: all clean realclean
 
 all: $(EXE)
 	@mkdir -p ../bin
@@ -24,6 +24,9 @@ all: $(EXE)
 
 clean:
 	@rm -fv $(EXE) $(OBJ)
+
+realclean: clean
+	@rm -fv ../bin/$(EXE)
 
 $(EXE): $(OBJ)
 	$(LD) -o $(EXE) $(OBJ) $(LDFLAGS) $(LIBS)

@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#define DEFAULT_SIZE 1000
+#define DEFAULT_SIZE 1000000
 
 int foo(int x) {
   int res; 

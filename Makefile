@@ -16,3 +16,7 @@ clean:
 	$(MAKE) -C src clean
 	$(MAKE) -C tests clean
 
+realclean:
+	$(MAKE) -C src realclean
+	$(MAKE) -C tests realclean
+
