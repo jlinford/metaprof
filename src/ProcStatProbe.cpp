@@ -40,7 +40,7 @@ void ProcStatProbe::Measure()
 ostream & ProcStatProbe::WriteDeliminated(std::ostream & os, char const d) const
 {
   // Get sysinfo
-  static long const PAGE_SIZE = sysconf(_SC_CLK_TCK);
+  static long const PAGE_SIZE = sysconf(_SC_PAGESIZE);
   static long const TICKS_PER_SECOND = sysconf(_SC_CLK_TCK);
 
   unsigned long code_size = initial_stat_.endcode - initial_stat_.startcode;
@@ -64,7 +64,7 @@ ostream & ProcStatProbe::WriteDeliminated(std::ostream & os, char const d) const
 
     os << ts << d;
     os << (s.vsize / 1024) << d;
-    os << (s.rss * PAGE_SIZE) << d;
+    os << (s.rss * PAGE_SIZE / 1024) << d;
     os << s.minflt << d;
     os << s.majflt << d;
     os << (s.utime * TICKS_PER_SECOND) << d;

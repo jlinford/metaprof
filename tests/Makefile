@@ -1,42 +1,22 @@
 
-SRC = $(wildcard *.c)
-HDR = $(wildcard *.h)
-OBJ = $(SRC:.c=.o)
-TAU_OBJ = $(OBJ:.o=.tau.o)
-
-EXE = foo
-TAU_EXE = foo.tau
-
-CPPFLAGS =
-
-TAU_CC = tau_cc.sh
-CC = gcc
-
-CFLAGS = -g
-
-LDFLAGS =
-LIBS =
+TARGETS = foo start_stop
 
 
+.PHONY: all clean $(TARGETS)
 
-.PHONY: all clean realclean
+all: $(TARGETS)
 
-all: $(EXE) $(TAU_EXE)
+foo:
+	$(MAKE) -C foo
+
+start_stop:
+	$(MAKE) -C start_stop
 
 clean:
-	@rm -fv $(EXE) $(TAU_EXE) $(OBJ) $(TAU_OBJ)
+	$(MAKE) -C foo clean
+	$(MAKE) -C start_stop clean
 
-realclean: clean
-
-$(EXE): $(OBJ)
-	$(CC) -o $(EXE) $(OBJ) $(LDFLAGS) $(LIBS)
-
-$(TAU_EXE): $(TAU_OBJ)
-	$(TAU_CC) -o $(TAU_EXE) $(TAU_OBJ) $(LDFLAGS) $(LIBS)
-
-%.o: %.c $(HDR) Makefile
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
-
-%.tau.o: %.c $(HDR) Makefile
-	$(TAU_CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+realclean:
+	$(MAKE) -C foo realclean
+	$(MAKE) -C start_stop realclean
 

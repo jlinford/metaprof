@@ -1,12 +1,18 @@
 #include <stdio.h>
+#include <unistd.h>
+
+#ifndef TAU_PROFILE
+#define TAU_START(...)
+#define TAU_STOP(...)
+#endif
 
 #define DEFAULT_SIZE 1000000
 
 int foo(int x) {
   int res; 
-  //TAU_START("infoo");
+  TAU_START("footimer");
   res = x+3*x*x; 
-  //TAU_STOP("infoo");
+  TAU_STOP("footimer");
   return res;
 }
 
@@ -24,6 +30,10 @@ int main(int argc, char **argv)
     foo(i);
   }
 
+  printf("Sleeping for 2 seconds...\n");
+  usleep(2*1e6);
+
   printf("Done!\n");
   return 0;
 }
+
