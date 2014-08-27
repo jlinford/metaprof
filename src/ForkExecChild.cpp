@@ -38,6 +38,7 @@ int ForkExecChild::Create(int argc, char ** argv)
     return retval_;
   } else {
     // Parent process waits for child to complete
+    ActivateProbes();
     while (true) {
       Measure();
 
@@ -46,10 +47,12 @@ int ForkExecChild::Create(int argc, char ** argv)
       if (code == pid_) {
         if (WIFEXITED(status)) {
           // Child exited normally, return child process exit code
-          return (retval_ = WEXITSTATUS(status));
+          retval_ = WEXITSTATUS(status);
+          break;
         } else if (WIFSIGNALED(status)) {
           // Child terminated by signal, return signal number negated
-          return (retval_ = -(WTERMSIG(status)));
+          retval_ = -(WTERMSIG(status));
+          break;
         }
       } else if (code == -1) {
         // waitpid failed
@@ -60,6 +63,8 @@ int ForkExecChild::Create(int argc, char ** argv)
         usleep(freq_);
       }
     }
+    DeactivateProbes();
+    return retval_;
   }
   // Something unexpected happened
   retval_ = -1;

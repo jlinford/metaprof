@@ -51,9 +51,21 @@ public:
     return pid_;
   }
 
+  virtual void ActivateProbes() {
+    for(ProbeVector::iterator it = probes_.begin(); it != probes_.end(); it++) {
+      (*it)->Activate();
+    }
+  }
+
   virtual void Measure() {
     for(ProbeVector::iterator it = probes_.begin(); it != probes_.end(); it++) {
       (*it)->Measure();
+    }
+  }
+
+  virtual void DeactivateProbes() {
+    for(ProbeVector::iterator it = probes_.begin(); it != probes_.end(); it++) {
+      (*it)->Deactivate();
     }
   }
 

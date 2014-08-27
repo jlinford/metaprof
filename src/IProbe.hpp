@@ -26,7 +26,11 @@ public:
     return samples_;
   }
 
+  virtual void Activate() = 0;
+
   virtual void Measure() = 0;
+
+  virtual void Deactivate() = 0;
 
   virtual std::ostream & WriteDeliminated(std::ostream & os, char const d=',') const = 0;
 
