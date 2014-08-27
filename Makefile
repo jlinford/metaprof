@@ -1,35 +1,18 @@
 
-SRC = $(wildcard *.cpp)
-HDR = $(wildcard *.hpp)
-OBJ = $(SRC:.cpp=.o)
-
-EXE = overhead
-
-CPPFLAGS =
-
-CXX = g++
-CXXFLAGS = -g
-
-LD = $(CXX)
-LDFLAGS =
-LIBS = -lrt
+TARGETS = src tests
 
 
+.PHONY: all clean $(TARGETS)
 
-.PHONY: all clean tests
+all: $(TARGETS)
 
-all: $(EXE) tests
+src:
+	$(MAKE) -C src
 
 tests:
 	$(MAKE) -C tests
 
 clean:
-	@rm -fv $(EXE) $(OBJ)
+	$(MAKE) -C src clean
 	$(MAKE) -C tests clean
-
-$(EXE): $(OBJ)
-	$(LD) -o $(EXE) $(OBJ) $(LDFLAGS) $(LIBS)
-
-%.o: %.cpp $(HDR) Makefile
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 
