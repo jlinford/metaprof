@@ -4,9 +4,9 @@
 
 int foo(int x) {
   int res; 
-  TAU_START("infoo");
+  //TAU_START("infoo");
   res = x+3*x*x; 
-  TAU_STOP("infoo");
+  //TAU_STOP("infoo");
   return res;
 }
 
