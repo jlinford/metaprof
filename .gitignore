@@ -17,6 +17,10 @@ profile.*
 *.csv
 *.ppk
 
+# Ignore instrumentation files
+*.inst.*
+*.pdb
+
 # Ignore executables
 overhead
 quantify

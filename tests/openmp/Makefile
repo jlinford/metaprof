@@ -42,17 +42,17 @@ HDR = $(wildcard *.h)
 OBJ = $(SRC:.c=.o)
 TAU_OBJ = $(OBJ:.o=.tau.o)
 
-EXE = foo
-TAU_EXE = foo.tau
+EXE = foo_omp
+TAU_EXE = foo_omp.tau
 
 CPPFLAGS =
 
 TAU_CC = tau_cc.sh
 CC = gcc
 
-CFLAGS = -g
+CFLAGS = -g -fopenmp
 
-LDFLAGS =
+LDFLAGS = -fopenmp
 LIBS =
 
 
@@ -63,7 +63,6 @@ all: $(EXE) $(TAU_EXE)
 
 clean:
 	@rm -fv $(EXE) $(TAU_EXE) $(OBJ) $(TAU_OBJ)
-	@rm -f *.inst.* *.pdb
 
 realclean: clean
 
