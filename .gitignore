@@ -22,4 +22,4 @@ overhead
 quantify
 
 # Ignore doc folder
-/doc
+#/doc
