@@ -2,7 +2,7 @@
 TARGETS = src
 
 
-.PHONY: all clean $(TARGETS)
+.PHONY: all clean tests src
 
 all: $(TARGETS)
 
