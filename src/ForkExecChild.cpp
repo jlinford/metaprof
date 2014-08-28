@@ -127,17 +127,13 @@ void ForkExecChild::ReportToCSVFile(char const * tag)
   }
   buff << "csv";
 
-  timeval diff;
-  timersub(&end_time_, &start_time_, &diff);
-  double runtime = (diff.tv_sec * 1e6 + diff.tv_usec) / 1e6;
-
   // Open CSV file for write
   ofstream os(buff.str().c_str());
 
   // Write summary
   os << "Executable,Runtime (s)," << endl;
   os << exe_name_ << ',';
-  os << runtime << ',';
+  os << runtime() << ',';
   os << endl;
 
   // Separate summary from probe table by an empty field
@@ -153,3 +149,12 @@ void ForkExecChild::ReportToCSVFile(char const * tag)
   os.close();
 }
 
+void ForkExecChild::PrintSummary()
+{
+  // Print probe summaries
+  for(ProbeVector::const_iterator it=probes_.begin(); it!=probes_.end(); it++) {
+    (*it)->WriteSummary(cout);
+    cout << endl;
+  }
+  cout << "Runtime (s): " << runtime() << endl;
+}

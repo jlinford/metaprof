@@ -103,6 +103,13 @@ public:
   ///
   virtual std::ostream & WriteDeliminated(std::ostream & os, char const d=',') const = 0;
 
+  ///
+  /// Writes a short summary of data gathered so far
+  /// @param os The stream to write to
+  /// @return The stream 'os' after writing
+  ///
+  virtual std::ostream & WriteSummary(std::ostream & os) const = 0;
+
 protected:
 
   /// The process being probed

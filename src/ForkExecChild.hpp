@@ -68,13 +68,11 @@ public:
   ///
   virtual void ReportToCSVFile(char const * tag=NULL);
 
-private:
+  ///
+  /// Prints a short summary of each probe and child process runtime on stdout
+  ///
+  virtual void PrintSummary();
 
-  /// Time of child process creation
-  timeval start_time_;
-
-  /// Time parent process saw child process termination
-  timeval end_time_;
 };
 
 

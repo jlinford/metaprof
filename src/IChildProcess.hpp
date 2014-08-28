@@ -119,6 +119,15 @@ public:
   }
 
   ///
+  /// Returns child process runtime in seconds
+  ///
+  double runtime() const {
+    timeval diff;
+    timersub(&end_time_, &start_time_, &diff);
+    return (diff.tv_sec * 1e6 + diff.tv_usec) / 1e6;
+  }
+
+  ///
   /// Calls Activate() on all probes attached to the process
   ///
   virtual void ActivateProbes() {
@@ -160,6 +169,11 @@ public:
   ///
   virtual void ReportToCSVFile(char const * tag=NULL) = 0;
 
+  ///
+  /// Prints a short summary of each probe and child process runtime on stdout
+  ///
+  virtual void PrintSummary() = 0;
+
 protected:
 
   /// Resource usage probes
@@ -167,6 +181,12 @@ protected:
 
   /// Child process executable name
   std::string exe_name_;
+
+  /// Time of child process creation
+  timeval start_time_;
+
+  /// Time parent process saw child process termination
+  timeval end_time_;
 
   /// Child process return value
   int retval_;

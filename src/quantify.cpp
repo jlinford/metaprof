@@ -69,6 +69,9 @@ int main(int argc, char ** argv)
   // Report data gathered via sampling
   child->ReportToCSVFile();
 
+  // Show summary on stdout
+  child->PrintSummary();
+
   // Peace out
   return retval;
 }

@@ -54,7 +54,12 @@ public:
   /// @param proc The process being probed
   ///
   ProcStatProbe(IChildProcess * const proc) :
-    IProbe(proc)
+    IProbe(proc),
+    max_minflt_(0),
+    max_majflt_(0),
+    max_num_threads_(0),
+    max_vsize_(0),
+    max_rss_(0)
   {
     if (gettimeofday(&t0_, NULL) == -1) {
       throw std::runtime_error(strerror(errno));
@@ -93,7 +98,26 @@ public:
   ///
   virtual std::ostream & WriteDeliminated(std::ostream & os, char const d=',') const;
 
+  ///
+  /// Writes a short summary of data gathered so far
+  /// @param os The stream to write to
+  /// @return The stream 'os' after writing
+  ///
+  virtual std::ostream & WriteSummary(std::ostream & os) const;
+
 private:
+
+  /// Page size in bytes
+  static long const PAGE_SIZE_;
+
+  /// Clock ticks per second
+  static long const TICKS_PER_SECOND_;
+
+  unsigned long max_minflt_;  ///< Highest measured minor faults not requiring page load from disk
+  unsigned long max_majflt_;  ///< Highest measured major faults requiring page load from disk
+  long max_num_threads_;      ///< Highest measured number of threads in the process
+  unsigned long max_vsize_;   ///< Highest measured virtual memory size in bytes
+  long max_rss_;              ///< Highest measured number of pages process has in real memory
 
   /// First known time for timestamp adjustment
   timeval t0_;
