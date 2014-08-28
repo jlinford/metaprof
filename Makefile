@@ -1,5 +1,5 @@
 
-TARGETS = src tests
+TARGETS = src
 
 
 .PHONY: all clean $(TARGETS)
