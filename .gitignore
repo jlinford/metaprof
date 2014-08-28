@@ -1,0 +1,22 @@
+*.o
+*.a
+*.so
+*.dylib
+*.pyo
+*.pyc
+a.out
+.project
+.cproject
+.gitignore
+.ptp-sync
+.pydevproject
+cscope.*
+
+# Ignore output files
+profile.*
+*.csv
+*.ppk
+
+# Ignore executables
+overhead
+quantify
