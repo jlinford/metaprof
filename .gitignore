@@ -10,6 +10,7 @@ a.out
 .ptp-sync
 .pydevproject
 cscope.*
+.settings
 
 # Ignore output files
 profile.*
