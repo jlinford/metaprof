@@ -41,29 +41,28 @@ SRC = $(wildcard *.cpp)
 HDR = $(wildcard *.hpp)
 OBJ = $(SRC:.cpp=.o)
 
-TARGETS = metaprof quantify csvreport
+TARGET = libmetaprof.a
+
+CPPFLAGS =
+
+CXX = g++
+CXXFLAGS = -g -Wall
+
+AR = ar rcs
 
 
-.PHONY: all clean realclean $(TARGETS)
+.PHONY: all clean realclean
 
-all: $(TARGETS)
+all: $(TARGET)
 
 clean:
-	$(MAKE) -C metaprof clean
-	$(MAKE) -C quantify clean
-	$(MAKE) -C csvreport clean
+	@rm -fv $(TARGET) $(OBJ)
 
 realclean: clean
-	$(MAKE) -C metaprof realclean
-	$(MAKE) -C quantify realclean
-	$(MAKE) -C csvreport realclean
 
-libmetaprof:
-	$(MAKE) -C metaprof
+$(TARGET): $(OBJ)
+	$(AR) $(TARGET) $(OBJ)
 
-quantify: libmetaprof
-	$(MAKE) -C quantify
-
-csvreport: libmetaprof
-	$(MAKE) -C csvreport
+%.o: %.cpp $(HDR) Makefile
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 

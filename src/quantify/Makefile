@@ -37,33 +37,41 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
 # 
 
+TOP_DIR = ../..
+BIN_DIR = $(TOP_DIR)/bin
+
 SRC = $(wildcard *.cpp)
 HDR = $(wildcard *.hpp)
 OBJ = $(SRC:.cpp=.o)
 
-TARGETS = metaprof quantify csvreport
+EXE = quantify
+
+CPPFLAGS = -I../metaprof
+
+CXX = g++
+CXXFLAGS = -g -Wall
+
+LD = $(CXX)
+LDFLAGS = -L../metaprof
+LIBS = -lmetaprof
 
 
-.PHONY: all clean realclean $(TARGETS)
 
-all: $(TARGETS)
+.PHONY: all clean realclean
+
+all: $(EXE)
+	@mkdir -p $(BIN_DIR)
+	@cp -fv $(EXE) $(BIN_DIR)
 
 clean:
-	$(MAKE) -C metaprof clean
-	$(MAKE) -C quantify clean
-	$(MAKE) -C csvreport clean
+	@rm -fv $(EXE) $(OBJ)
 
 realclean: clean
-	$(MAKE) -C metaprof realclean
-	$(MAKE) -C quantify realclean
-	$(MAKE) -C csvreport realclean
+	@rm -fv $(BIN_DIR)/$(EXE)
 
-libmetaprof:
-	$(MAKE) -C metaprof
+$(EXE): $(OBJ)
+	$(LD) -o $(EXE) $(OBJ) $(LDFLAGS) $(LIBS)
 
-quantify: libmetaprof
-	$(MAKE) -C quantify
-
-csvreport: libmetaprof
-	$(MAKE) -C csvreport
+%.o: %.cpp $(HDR) Makefile
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $<
 

@@ -7,7 +7,6 @@
 a.out
 .project
 .cproject
-.gitignore
 .ptp-sync
 .pydevproject
 cscope.*
@@ -22,8 +21,7 @@ profile.*
 *.pdb
 
 # Ignore executables
-overhead
-quantify
+/bin
 
 # Ignore doc folder
 /doc
