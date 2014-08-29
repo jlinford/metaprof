@@ -37,76 +37,92 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
 
+#include <unistd.h>
+
+#include <cstdlib>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <map>
+
+#include "ProcStatSample.hpp"
 
 using namespace std;
 
-#if 0
 ///
-/// Creates a new comma-separated values (CSV) file containing
-/// all data from all probes attached to the process.
-/// The file is named {child_exe}[.tag].csv the the current directory.
-/// @param tag An optional identifier for the CSV file name.
+/// Ordered, NULL-terminated list of field names
 ///
-virtual void ReportToCSVFile(char const * tag=NULL);
-
-///
-/// Creates a new GNUPlot data file containing
-/// all data from all probes attached to the process.
-/// The file is named {child_exe}[.tag].dat the the current directory.
-/// @param tag An optional identifier for the dat file name.
-///
-virtual void ReportToGnuplot(char const * tag=NULL);
-
-
-ostream & ProcStatProbe::WriteDeliminatedHeaders(std::ostream & os, char const d) const
+char const * PROCSTAT_FIELDS[] =
 {
-  // Write column headers
-  for (char const ** p=SAMPLE_FIELD_NAMES; *p; ++p) {
-    os << *p << d;
+  "Timestamp (s)",
+  "VMemory Size (kb)",
+  "RSS (kb)",
+  "Minor Page Faults",
+  "Major Page Faults",
+  "User Time (s)",
+  "System Time (s)",
+  "Aggregated I/O Delay Time (s)",
+  "Code Size (b)",
+  "Data Size (b)",
+  "Threads",
+  "Processor",
+  "State",
+  "Child Minor Faults",
+  "Child Major Faults",
+  "Child User Time (s)",
+  "Child System Time (s)",
+  NULL
+};
+
+
+static void WriteProcStatHeaders(ostream & os)
+{
+  for (char const ** p=PROCSTAT_FIELDS; *p; ++p) {
+    os << *p << ',';
   }
   os << endl;
-  return os;
 }
 
-ostream & ProcStatProbe::WriteDeliminatedData(std::ostream & os, char const d) const
+static void WriteProcStatRecord(ostream & os, timeval t0,
+    StatRecord const & initial_stat, ProcStatSample const & s)
 {
-  unsigned long code_size = initial_stat_.endcode - initial_stat_.startcode;
-  unsigned long data_size = initial_stat_.end_data - initial_stat_.start_data;
+  static long PAGE_SIZE = sysconf(_SC_PAGESIZE);
+  static long TICKS_PER_SECOND = sysconf(_SC_CLK_TCK);
+  static char const d = ',';
 
-  // Write column data
-  // NOTE: Must match order of SAMPLE_FIELD_NAMES above!
-  for (SampleVector::const_iterator it=samples_.begin(); it != samples_.end(); it++) {
-    ProcStatSample const & s = *(ProcStatSample*)(*it);
+  unsigned long code_size = initial_stat.endcode - initial_stat.startcode;
+  unsigned long data_size = initial_stat.end_data - initial_stat.start_data;
 
-    // Timestamp in seconds since first measurement
-    timeval diff;
-    timersub(&s.timestamp, &t0_, &diff);
-    double ts = (diff.tv_sec * 1e6 + diff.tv_usec) / 1e6;
+  // Adjust timestamp to start at program launch
+  timeval dt;
+  timersub(&s.timestamp, &t0, &dt);
+  double ts = (dt.tv_sec * 1e6 + dt.tv_usec) / 1e6;
 
-    os << ts << d;
-    os << (s.vsize / 1024) << d;
-    os << (s.rss * PAGE_SIZE_ / 1024) << d;
-    os << s.minflt << d;
-    os << s.majflt << d;
-    os << (s.utime * TICKS_PER_SECOND_) << d;
-    os << (s.stime * TICKS_PER_SECOND_) << d;
-    os << (s.delayacct_blkio_ticks * TICKS_PER_SECOND_) << d;
-    os << code_size << d;
-    os << data_size << d;
-    os << s.num_threads << d;
-    os << s.processor << d;
-    os << s.state << d;
-    os << s.cminflt << d;
-    os << s.cmajflt << d;
-    os << (s.cutime * TICKS_PER_SECOND_) << d;
-    os << (s.cstime * TICKS_PER_SECOND_) << d;
-    os << endl;
-  }
-
-  return os;
+  // NOTE: Must match order of PROCSTAT_FIELD_NAMES above
+  os << ts << d;
+  os << (s.vsize / 1024) << d;
+  os << (s.rss * PAGE_SIZE / 1024) << d;
+  os << s.minflt << d;
+  os << s.majflt << d;
+  os << (s.utime * TICKS_PER_SECOND) << d;
+  os << (s.stime * TICKS_PER_SECOND) << d;
+  os << (s.delayacct_blkio_ticks * TICKS_PER_SECOND) << d;
+  os << code_size << d;
+  os << data_size << d;
+  os << s.num_threads << d;
+  os << s.processor << d;
+  os << s.state << d;
+  os << s.cminflt << d;
+  os << s.cmajflt << d;
+  os << (s.cutime * TICKS_PER_SECOND) << d;
+  os << (s.cstime * TICKS_PER_SECOND) << d;
+  os << endl;
 }
 
+
+
+#if 0
 ostream & ProcStatProbe::WriteGnuplot(ostream & os) const
 {
   static const size_t ROWS = 2;
@@ -184,47 +200,6 @@ ostream & ProcStatProbe::WriteGnuplot(ostream & os) const
   return os;
 }
 
-///
-/// Creates a new comma-separated values (CSV) file containing
-/// all data from all probes attached to the process.
-/// The file is named {child_exe}[.tag].csv the the current directory.
-/// @param tag An optional identifier for the CSV file name.
-///
-virtual void ReportToCSVFile(char const * tag=NULL) = 0;
-
-///
-/// Creates a new GNUPlot data file containing
-/// all data from all probes attached to the process.
-/// The file is named {child_exe}[.tag].dat the the current directory.
-/// @param tag An optional identifier for the dat file name.
-///
-virtual void ReportToGnuplot(char const * tag=NULL) = 0;
-
-///
-/// Writes character-deliminated data header to the specified stream
-/// @param os The stream to write to
-/// @param d  The deliminator
-/// @return The stream 'os' after writing
-///
-virtual std::ostream & WriteDeliminatedHeaders(std::ostream & os, char const d=',') const = 0;
-
-///
-/// Writes character-deliminated data to the specified stream
-/// @param os The stream to write to
-/// @param d  The deliminator
-/// @return The stream 'os' after writing
-///
-virtual std::ostream & WriteDeliminatedData(std::ostream & os, char const d=',') const = 0;
-
-///
-/// Writes a gnuplot script with data to the specified stream
-/// @param os The stream to write to
-/// @return The stream 'os' after writing
-///
-virtual std::ostream & WriteGnuplot(std::ostream & os) const = 0;
-
-
-
 void ForkExecChild::ReportToCSVFile(char const * tag)
 {
   // Open CSV file for write
@@ -263,8 +238,88 @@ void ForkExecChild::ReportToGnuplot(char const * tag)
 
 #endif
 
+static ofstream & procstat_report(string const & fname)
+{
+  static map<string,ofstream*> file_map;
+
+  ofstream * osptr = file_map[fname];
+  if (!osptr) {
+    string const stem = fname.substr(fname.find_last_of("/\\")+1);
+    string const fname = stem + ".csv";
+    osptr = new ofstream(fname.c_str());
+    file_map[fname] = osptr;
+    if (!*osptr) {
+      cerr << "Failed to open '" << fname << "' for write" << endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+  return *osptr;
+}
+
+static void UpdateProcStatReport(string const & fname)
+{
+  ofstream & os = procstat_report(fname);
+
+  ifstream is(fname.c_str());
+  if (!is) {
+    cerr << "Failed to open '" << fname << "' for read" << endl;
+  }
+
+  // Get executable name length
+  size_t exe_name_len;
+  is.read((char *)&exe_name_len, sizeof(size_t));
+
+  // Get executable name
+  char buff[exe_name_len];
+  is.read(buff, exe_name_len);
+  string exe_name(buff);
+
+  // Get initial timestamp and stat record
+  timeval t0;
+  is.read((char*)&t0, sizeof(timeval));
+
+  // Get initial stat record
+  StatRecord initial_stat;
+  is.read((char*)&initial_stat, sizeof(StatRecord));
+
+  // Write title
+  os << exe_name << ',' << endl;
+
+  // Separate title from data by an empty field
+  os << ',' << endl;
+
+  // Write column headers
+  WriteProcStatHeaders(os);
+
+  // Read samples into records
+  ProcStatSample sample;
+  while (is) {
+    is.read((char*)&sample, sizeof(ProcStatSample));
+    WriteProcStatRecord(os, t0, initial_stat, sample);
+  }
+}
+
+static void UpdateReport(string const & fname)
+{
+  string const ext = fname.substr(fname.find_last_of('.')+1);
+  if (ext == "ProcStat") {
+    UpdateProcStatReport(fname);
+  } else {
+    cerr << "Unknown file format: " << fname << endl;
+  }
+}
+
 int main(int argc, char ** argv)
 {
+  if (argc < 2) {
+    cout << "Usage: " << argv[0] << " file0 [file1 ...]" << endl;
+    return 0;
+  }
+
+  for (int i=1; i<argc; ++i) {
+    char const * fname = argv[i];
+    UpdateReport(fname);
+  }
 
   return 0;
 }

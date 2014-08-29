@@ -47,6 +47,21 @@
 using namespace std;
 
 
+void ProcStatProbe::Activate()
+{
+  IProbe::Activate();
+  initial_stat_.Read(proc_->pid());
+
+  // Start by recording some initial data
+  string const & exe_name = proc_->exe_name();
+  size_t exe_name_len = exe_name.length();
+  sample_stream_.write((char const *)&exe_name_len, sizeof(size_t));
+  sample_stream_.write(exe_name.c_str(), exe_name.size());
+  sample_stream_.write((char const *)&t0_, sizeof(timeval));
+  sample_stream_.write((char const *)&initial_stat_, sizeof(StatRecord));
+}
+
+
 void ProcStatProbe::Measure()
 {
   StatRecord stat;

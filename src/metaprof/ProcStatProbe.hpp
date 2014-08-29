@@ -72,19 +72,9 @@ public:
   virtual ~ProcStatProbe() { }
 
   ///
-  /// Reads /proc/[pid]/stat into initial_stat_ for future use
+  /// Initializes the sample output stream
   ///
-  virtual void Activate() {
-    IProbe::Activate();
-    initial_stat_.Read(proc_->pid());
-  }
-
-  ///
-  /// Empty
-  ///
-  virtual void Deactivate() {
-    IProbe::Deactivate();
-  }
+  virtual void Activate();
 
   ///
   /// Samples /proc/[pid]/stat

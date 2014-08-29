@@ -69,7 +69,7 @@ public:
   virtual ~ISample() { }
 
   ///
-  /// Write all fields to the specified stream
+  /// Write all fields to the specified stream in unformated binary
   /// @param os Stream to write to
   ///
   virtual std::ostream & Write(std::ostream & os) const = 0;
@@ -77,16 +77,5 @@ public:
   /// The time this sample instance was created
   timeval timestamp;
 };
-
-///
-/// Writes the given sample to the given stream
-/// @param os Stream to write to
-/// @param s  Sample to write
-///
-static inline
-std::ostream & operator<<(std::ostream & os, ISample const & s)
-{
-  return s.Write(os);
-}
 
 #endif /* _ISAMPLE_HPP_ */

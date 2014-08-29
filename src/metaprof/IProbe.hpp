@@ -110,8 +110,7 @@ protected:
   /// @param sample sample to record
   ///
   virtual void RecordSample(ISample const & sample) {
-    sample_stream_ << sample;
-    if (!sample_stream_) {
+    if (!sample.Write(sample_stream_)) {
       std::ostringstream buff;
       buff << "Failed to write to " << sample_stream_fname_;
       throw std::runtime_error(buff.str());

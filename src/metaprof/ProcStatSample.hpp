@@ -52,14 +52,28 @@
 ///
 struct ProcStatSample : public ISample
 {
+  ///
+  /// Empty constructor
+  ///
+  ProcStatSample() :
+    state(0),
+    minflt(0),
+    cminflt(0),
+    majflt(0),
+    cmajflt(0),
+    utime(0),
+    stime(0),
+    cutime(0),
+    cstime(0),
+    num_threads(0),
+    vsize(0),
+    rss(0),
+    processor(-1),
+    delayacct_blkio_ticks(0)
+  { }
 
   ///
-  /// Ordered, NULL-terminated list of field names
-  ///
-  static char const * FIELD_NAMES[];
-
-  ///
-  /// Constructor
+  /// Initializer
   ///
   ProcStatSample(StatRecord const & s) :
     state(s.state),
@@ -79,7 +93,7 @@ struct ProcStatSample : public ISample
   { }
 
   ///
-  /// Write all fields to the specified stream
+  /// Write all fields to the specified stream in unformated binary
   /// @param os Stream to write to
   ///
   virtual std::ostream & Write(std::ostream & os) const {
