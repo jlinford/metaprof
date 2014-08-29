@@ -50,6 +50,8 @@
 
 using namespace std;
 
+
+
 ///
 /// Ordered, NULL-terminated list of field names
 ///
@@ -76,20 +78,44 @@ static char const * PROCSTAT_FIELDS[] =
 };
 
 
+static string GetGnuplotDataFilename(string const & fname)
+{
+  return fname.substr(fname.find_last_of("/\\")+1) + ".dat";
+}
+
+static ofstream & procstat_gnuplot_data(string const & fname)
+{
+  static map<string,ofstream*> file_map;
+
+  ofstream * osptr = file_map[fname];
+  if (!osptr) {
+    osptr = new ofstream(GetGnuplotDataFilename(fname).c_str());
+    file_map[fname] = osptr;
+    if (!*osptr) {
+      cerr << "Failed to open '" << fname << "' for write" << endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+  return *osptr;
+}
+
+
 static void WriteProcStatHeaders(ostream & os)
 {
+  os << "# ";
   for (char const ** p=PROCSTAT_FIELDS; *p; ++p) {
     os << *p << ',';
   }
   os << endl;
 }
 
-static void WriteProcStatRecord(ostream & os, timeval t0,
+
+static void WriteGnuplotRecord(ostream & os, timeval t0,
     StatRecord const & initial_stat, ProcStatSample const & s)
 {
   static long PAGE_SIZE = sysconf(_SC_PAGESIZE);
   static long TICKS_PER_SECOND = sysconf(_SC_CLK_TCK);
-  static char const d = ',';
+  static char const d = ' ';
 
   unsigned long code_size = initial_stat.endcode - initial_stat.startcode;
   unsigned long data_size = initial_stat.end_data - initial_stat.start_data;
@@ -121,28 +147,46 @@ static void WriteProcStatRecord(ostream & os, timeval t0,
 }
 
 
-static ofstream & procstat_report(string const & fname)
-{
-  static map<string,ofstream*> file_map;
 
-  ofstream * osptr = file_map[fname];
-  if (!osptr) {
-    string const stem = fname.substr(fname.find_last_of("/\\")+1);
-    string const fname = stem + ".csv";
-    osptr = new ofstream(fname.c_str());
-    file_map[fname] = osptr;
-    if (!*osptr) {
-      cerr << "Failed to open '" << fname << "' for write" << endl;
-      exit(EXIT_FAILURE);
-    }
-  }
-  return *osptr;
+static void WriteGnuplotScript(string const & exe_name, string const & fname)
+{
+  static const size_t ROWS = 2;
+  static const size_t COLS = 2;
+
+  string const datfile = GetGnuplotDataFilename(fname);
+  string const scriptfile = fname.substr(fname.find_last_of("/\\")+1) + ".gnuplot";
+
+  ofstream os(scriptfile.c_str());
+
+  // Write gnuplot script
+  os << "#!/usr/bin/gnuplot -persist\n";
+  os << "\n";
+  os << "set multiplot layout " << ROWS << ", " << COLS << " title '" << exe_name << "'\n";
+  os << "set tmargin 3\n";
+  os << "set xtics font 'Verdana,6'\n";
+  os << "set ytics font 'Verdana,6'\n";
+  os << "\n";
+  os << "set title 'VMemory Size (kb)'\n";
+  os << "unset key\n";
+  os << "plot '" << datfile << "' using 1:2 with line\n";
+  os << "\n";
+  os << "set title 'RSS (kb)'\n";
+  os << "unset key\n";
+  os << "plot '" << datfile << "' using 1:3 with line\n";
+  os << "\n";
+  os << "set title 'Minor Page Faults'\n";
+  os << "unset key\n";
+  os << "plot '" << datfile << "' using 1:4 with line\n";
+  os << "\n";
+  os << "set title 'Major Page Faults'\n";
+  os << "unset key\n";
+  os << "plot '" << datfile << "' using 1:5 with line\n";
 }
 
 
 static void UpdateProcStatReport(string const & fname)
 {
-  ofstream & os = procstat_report(fname);
+  ofstream & os = procstat_gnuplot_data(fname);
 
   ifstream is(fname.c_str());
   if (!is) {
@@ -166,12 +210,6 @@ static void UpdateProcStatReport(string const & fname)
   StatRecord initial_stat;
   is.read((char*)&initial_stat, sizeof(StatRecord));
 
-  // Write title
-  os << exe_name << ',' << endl;
-
-  // Separate title from data by an empty field
-  os << ',' << endl;
-
   // Write column headers
   WriteProcStatHeaders(os);
 
@@ -179,8 +217,10 @@ static void UpdateProcStatReport(string const & fname)
   ProcStatSample sample;
   while (is) {
     is.read((char*)&sample, sizeof(ProcStatSample));
-    WriteProcStatRecord(os, t0, initial_stat, sample);
+    WriteGnuplotRecord(os, t0, initial_stat, sample);
   }
+
+  WriteGnuplotScript(exe_name, fname);
 }
 
 
@@ -193,6 +233,7 @@ static void UpdateReport(string const & fname)
     cerr << "Unknown file format: " << fname << endl;
   }
 }
+
 
 int main(int argc, char ** argv)
 {
