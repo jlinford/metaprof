@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * ProcStatProbe member definitions.
+ * Base class for probes.
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,49 +36,21 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#include <iostream>
-#include <sstream>
-#include <cstdio>
 
+#include "IProbe.hpp"
 #include "IChildProcess.hpp"
-#include "ProcStatProbe.hpp"
-#include "ProcStatSample.hpp"
 
 using namespace std;
 
-
-void ProcStatProbe::Measure()
+void IProbe::Activate()
 {
-  StatRecord stat;
-  stat.Read(proc_->pid());
-
-  ProcStatSample sample(stat);
-
-  max_minflt_ = max(sample.minflt, max_minflt_);
-  max_majflt_ = max(sample.majflt, max_majflt_);
-  max_num_threads_ = max(sample.num_threads, max_num_threads_);
-  max_vsize_ = max(sample.vsize, max_vsize_);
-  max_rss_ = max(sample.rss, max_rss_);
-
-  RecordSample(sample);
+  static const ios_base::openmode flags = ios_base::binary;
+  sample_stream_fname_ = proc_->BuildFilename(name_.c_str());
+  sample_stream_.open(sample_stream_fname_.c_str(), flags);
 }
 
-
-ostream & ProcStatProbe::WriteSummary(ostream & os) const
+void IProbe::Deactivate()
 {
-  /// Page size in bytes
-  static long const PAGE_SIZE = sysconf(_SC_PAGESIZE);
-
-  unsigned long code_size = initial_stat_.endcode - initial_stat_.startcode;
-  unsigned long data_size = initial_stat_.end_data - initial_stat_.start_data;
-
-  os << "Max Threads:      " << max_num_threads_ << '\n';
-  os << "Max Major Faults: " << max_majflt_ << '\n';
-  os << "Max Minor Faults: " << max_minflt_ << '\n';
-  os << "Code Size (b):    " << code_size << '\n';
-  os << "Data Size (b):    " << data_size << '\n';
-  os << "Max RSS (kb):     " << (max_rss_ * PAGE_SIZE / 1024) << '\n';
-  os << "Max Vmem (kb):    " << (max_vsize_ / 1024);
-
-  return os;
+  sample_stream_.close();
+  sample_stream_fname_.clear();
 }

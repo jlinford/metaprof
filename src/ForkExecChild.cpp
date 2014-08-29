@@ -56,7 +56,6 @@
 
 using namespace std;
 
-
 int ForkExecChild::Create(int argc, char ** argv)
 {
   // Record name of child executable as seen on command line
@@ -115,38 +114,6 @@ int ForkExecChild::Create(int argc, char ** argv)
   throw runtime_error("Unexpected exit path from ForkExecChild::Create");
   // Keep the compiler happy
   return retval_;
-}
-
-
-void ForkExecChild::ReportToCSVFile(char const * tag)
-{
-  ostringstream buff;
-  buff << exe_name_.substr(exe_name_.find_last_of("/\\")+1) << ".";
-  if (tag) {
-    buff << tag << ".";
-  }
-  buff << "csv";
-
-  // Open CSV file for write
-  ofstream os(buff.str().c_str());
-
-  // Write summary
-  os << "Executable,Runtime (s)," << endl;
-  os << exe_name_ << ',';
-  os << runtime() << ',';
-  os << endl;
-
-  // Separate summary from probe table by an empty field
-  os << ',' << endl;
-
-  // Write probe tables
-  for(ProbeVector::const_iterator it=probes_.begin(); it!=probes_.end(); it++) {
-    (*it)->WriteDeliminated(os);
-    os << endl;
-  }
-
-  // Flush and close file
-  os.close();
 }
 
 void ForkExecChild::PrintSummary()

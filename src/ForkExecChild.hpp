@@ -39,6 +39,8 @@
 #ifndef _FORKEXECHILD_HPP_
 #define _FORKEXECHILD_HPP_
 
+#include <string>
+
 #include "IChildProcess.hpp"
 
 ///
@@ -61,18 +63,9 @@ public:
   int Create(int argc, char ** argv);
 
   ///
-  /// Creates a new comma-separated values (CSV) file containing
-  /// all data from all probes attached to the process.
-  /// The file is named {child_exe}[.tag].csv the the current directory.
-  /// @param tag An optional identifier for the CSV file name.
-  ///
-  virtual void ReportToCSVFile(char const * tag=NULL);
-
-  ///
   /// Prints a short summary of each probe and child process runtime on stdout
   ///
   virtual void PrintSummary();
-
 };
 
 

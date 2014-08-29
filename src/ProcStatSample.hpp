@@ -39,6 +39,8 @@
 #ifndef _PROCSTATSAMPLE_HPP_
 #define _PROCSTATSAMPLE_HPP_
 
+#include <iostream>
+
 #include "StatRecord.hpp"
 #include "ISample.hpp"
 
@@ -50,6 +52,11 @@
 ///
 struct ProcStatSample : public ISample
 {
+
+  ///
+  /// Ordered, NULL-terminated list of field names
+  ///
+  static char const * FIELD_NAMES[];
 
   ///
   /// Constructor
@@ -71,6 +78,14 @@ struct ProcStatSample : public ISample
     delayacct_blkio_ticks(s.delayacct_blkio_ticks)
   { }
 
+  ///
+  /// Write all fields to the specified stream
+  /// @param os Stream to write to
+  ///
+  virtual std::ostream & Write(std::ostream & os) const {
+    return os.write((char const*)this, sizeof(ProcStatSample));
+  }
+
   char state;                 ///< Process state
   unsigned long minflt;       ///< Minor faults not requiring page load from disk
   unsigned long cminflt;      ///< Minor faults made by process's children
@@ -85,6 +100,6 @@ struct ProcStatSample : public ISample
   long rss;                   ///< Number of pages process has in real memory
   int processor;              ///< CPU number last executed on
   unsigned long long delayacct_blkio_ticks;   ///< Aggregated block I/O delays in clock ticks
-}; 
+};
 
 #endif /* _PROCSTATSAMPLE_HPP_ */

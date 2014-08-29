@@ -67,7 +67,8 @@ int main(int argc, char ** argv)
   int retval = child->Create(argc, argv);
 
   // Report data gathered via sampling
-  child->ReportToCSVFile();
+//  child->ReportToCSVFile();
+//  child->ReportToGnuplot();
 
   // Show summary on stdout
   child->PrintSummary();

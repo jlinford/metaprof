@@ -54,7 +54,7 @@ public:
   /// @param proc The process being probed
   ///
   ProcStatProbe(IChildProcess * const proc) :
-    IProbe(proc),
+    IProbe(proc, "ProcStat"),
     max_minflt_(0),
     max_majflt_(0),
     max_num_threads_(0),
@@ -75,6 +75,7 @@ public:
   /// Reads /proc/[pid]/stat into initial_stat_ for future use
   ///
   virtual void Activate() {
+    IProbe::Activate();
     initial_stat_.Read(proc_->pid());
   }
 
@@ -82,21 +83,13 @@ public:
   /// Empty
   ///
   virtual void Deactivate() {
-    // Nothing to do
+    IProbe::Deactivate();
   }
 
   ///
   /// Samples /proc/[pid]/stat
   ///
   virtual void Measure();
-
-  ///
-  /// Writes character-deliminated data to the specified stream
-  /// @param os The stream to write to
-  /// @param d  The deliminator
-  /// @return The stream 'os' after writing
-  ///
-  virtual std::ostream & WriteDeliminated(std::ostream & os, char const d=',') const;
 
   ///
   /// Writes a short summary of data gathered so far
@@ -106,12 +99,6 @@ public:
   virtual std::ostream & WriteSummary(std::ostream & os) const;
 
 private:
-
-  /// Page size in bytes
-  static long const PAGE_SIZE_;
-
-  /// Clock ticks per second
-  static long const TICKS_PER_SECOND_;
 
   unsigned long max_minflt_;  ///< Highest measured minor faults not requiring page load from disk
   unsigned long max_majflt_;  ///< Highest measured major faults requiring page load from disk

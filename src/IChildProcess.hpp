@@ -42,6 +42,7 @@
 #include <unistd.h>
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <string>
 
@@ -88,6 +89,13 @@ public:
   ///
   ProbeVector const & probes() const {
     return probes_;
+  }
+
+  ///
+  /// exe_name accessor
+  ///
+  std::string const & exe_name() const {
+    return exe_name_;
   }
 
   ///
@@ -155,19 +163,27 @@ public:
   }
 
   ///
+  /// Return a filename based on the name of the child process executable
+  /// Filename is exe_name[.tag].ext
+  /// @param ext File extension
+  /// @param tag Optional tag
+  /// @return The filename string
+  virtual std::string BuildFilename(char const * ext, char const * tag=NULL) {
+    std::ostringstream buff;
+    buff << exe_name_.substr(exe_name_.find_last_of("/\\")+1) << ".";
+    if (tag) {
+      buff << tag << ".";
+    }
+    buff << ext;
+    return buff.str();
+  }
+
+  ///
   /// Creates the child process using the specified command line arguments
   /// @param argc Argument count
   /// @param argv Command line arguments
   ///
   virtual int Create(int argc, char ** argv) = 0;
-
-  ///
-  /// Creates a new comma-separated values (CSV) file containing
-  /// all data from all probes attached to the process.
-  /// The file is named {child_exe}[.tag].csv the the current directory.
-  /// @param tag An optional identifier for the CSV file name.
-  ///
-  virtual void ReportToCSVFile(char const * tag=NULL) = 0;
 
   ///
   /// Prints a short summary of each probe and child process runtime on stdout
@@ -196,7 +212,6 @@ protected:
 
   /// Microseconds between samples for all probes
   useconds_t freq_;
-
 };
 
 

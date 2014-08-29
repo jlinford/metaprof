@@ -43,14 +43,17 @@
 #include <errno.h>
 #include <string.h>
 
+#include <iostream>
 #include <stdexcept>
 
 ///
 /// Base class for samples.
 /// Maintains common fields like the timestamp
 ///
-struct ISample
+class ISample
 {
+public:
+
   ///
   /// Timestamp the sample on creation
   ///
@@ -60,9 +63,30 @@ struct ISample
     }
   }
 
+  ///
+  /// Empty destructor
+  ///
+  virtual ~ISample() { }
+
+  ///
+  /// Write all fields to the specified stream
+  /// @param os Stream to write to
+  ///
+  virtual std::ostream & Write(std::ostream & os) const = 0;
+
   /// The time this sample instance was created
   timeval timestamp;
 };
 
+///
+/// Writes the given sample to the given stream
+/// @param os Stream to write to
+/// @param s  Sample to write
+///
+static inline
+std::ostream & operator<<(std::ostream & os, ISample const & s)
+{
+  return s.Write(os);
+}
 
 #endif /* _ISAMPLE_HPP_ */

@@ -40,7 +40,9 @@
 #define _IPROBE_HPP_
 
 #include <iostream>
-#include <vector>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 #include "ISample.hpp"
 
@@ -56,14 +58,13 @@ class IProbe
 {
 public:
 
-  /// A collection of samples
-  typedef std::vector<ISample*> SampleVector;
-
   ///
   /// Minimal constructor
   ///
-  IProbe(IChildProcess * const proc) :
-    proc_(proc)
+  IProbe(IChildProcess * const proc, std::string const & name) :
+    proc_(proc),
+    name_(name),
+    sample_count_(0)
   { }
 
   ///
@@ -72,36 +73,28 @@ public:
   virtual ~IProbe() { }
 
   ///
-  /// samples_ accessor
+  /// name_ accessor
   ///
-  SampleVector const & samples() const {
-    return samples_;
+  std::string const & name() const {
+    return name_;
   }
 
   ///
   /// Initializes and enables the probe
   /// In current design this should only happen once
   ///
-  virtual void Activate() = 0;
-
-  ///
-  /// Takes a sample of the probed metrics
-  ///
-  virtual void Measure() = 0;
+  virtual void Activate();
 
   ///
   /// Disables the probe
   /// In current design this should only happen once
   ///
-  virtual void Deactivate() = 0;
+  virtual void Deactivate();
 
   ///
-  /// Writes character-deliminated data to the specified stream
-  /// @param os The stream to write to
-  /// @param d  The deliminator
-  /// @return The stream 'os' after writing
+  /// Takes a sample of the probed metrics
   ///
-  virtual std::ostream & WriteDeliminated(std::ostream & os, char const d=',') const = 0;
+  virtual void Measure() = 0;
 
   ///
   /// Writes a short summary of data gathered so far
@@ -112,12 +105,33 @@ public:
 
 protected:
 
+  ///
+  /// Records a sample, possibly flushing to disk
+  /// @param sample sample to record
+  ///
+  virtual void RecordSample(ISample const & sample) {
+    sample_stream_ << sample;
+    if (!sample_stream_) {
+      std::ostringstream buff;
+      buff << "Failed to write to " << sample_stream_fname_;
+      throw std::runtime_error(buff.str());
+    }
+  }
+
   /// The process being probed
   IChildProcess * const proc_;
 
-  /// Samples of probed metric
-  SampleVector samples_;
+  /// Probe name, e.g. "ProcStat"
+  std::string const name_;
 
+  /// Number of samples recorded so far
+  size_t sample_count_;
+
+  /// Name of samples file
+  std::string sample_stream_fname_;
+
+  /// Store samples in a file buffer
+  std::ofstream sample_stream_;
 };
 
 #endif /* _IPROBE_HPP_ */

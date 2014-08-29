@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * ProcStatProbe member definitions.
+ * ProcStatSample declaration.
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,49 +36,35 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#include <iostream>
-#include <sstream>
-#include <cstdio>
 
-#include "IChildProcess.hpp"
-#include "ProcStatProbe.hpp"
+#include <unistd.h>
+
+#include <sstream>
+#include <stdexcept>
+
 #include "ProcStatSample.hpp"
 
 using namespace std;
 
 
-void ProcStatProbe::Measure()
+char const * ProcStatSample::FIELD_NAMES[] =
 {
-  StatRecord stat;
-  stat.Read(proc_->pid());
-
-  ProcStatSample sample(stat);
-
-  max_minflt_ = max(sample.minflt, max_minflt_);
-  max_majflt_ = max(sample.majflt, max_majflt_);
-  max_num_threads_ = max(sample.num_threads, max_num_threads_);
-  max_vsize_ = max(sample.vsize, max_vsize_);
-  max_rss_ = max(sample.rss, max_rss_);
-
-  RecordSample(sample);
-}
-
-
-ostream & ProcStatProbe::WriteSummary(ostream & os) const
-{
-  /// Page size in bytes
-  static long const PAGE_SIZE = sysconf(_SC_PAGESIZE);
-
-  unsigned long code_size = initial_stat_.endcode - initial_stat_.startcode;
-  unsigned long data_size = initial_stat_.end_data - initial_stat_.start_data;
-
-  os << "Max Threads:      " << max_num_threads_ << '\n';
-  os << "Max Major Faults: " << max_majflt_ << '\n';
-  os << "Max Minor Faults: " << max_minflt_ << '\n';
-  os << "Code Size (b):    " << code_size << '\n';
-  os << "Data Size (b):    " << data_size << '\n';
-  os << "Max RSS (kb):     " << (max_rss_ * PAGE_SIZE / 1024) << '\n';
-  os << "Max Vmem (kb):    " << (max_vsize_ / 1024);
-
-  return os;
-}
+  "Timestamp (s)",
+  "VMemory Size (kb)",
+  "RSS (kb)",
+  "Minor Page Faults",
+  "Major Page Faults",
+  "User Time (s)",
+  "System Time (s)",
+  "Aggregated I/O Delay Time (s)",
+  "Code Size (b)",
+  "Data Size (b)",
+  "Threads",
+  "Processor",
+  "State",
+  "Child Minor Faults",
+  "Child Major Faults",
+  "Child User Time (s)",
+  "Child System Time (s)",
+  NULL
+};
