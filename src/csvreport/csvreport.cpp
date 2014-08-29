@@ -154,8 +154,9 @@ static void UpdateProcStatReport(string const & fname)
   is.read((char *)&exe_name_len, sizeof(size_t));
 
   // Get executable name
-  char buff[exe_name_len];
+  char buff[exe_name_len+1];
   is.read(buff, exe_name_len);
+  buff[exe_name_len] = '\0';
   string exe_name(buff);
 
   // Get initial timestamp and stat record

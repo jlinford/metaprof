@@ -2,12 +2,15 @@
 TARGETS = src
 
 
-.PHONY: all clean tests src
+.PHONY: all clean tests src doc
 
 all: $(TARGETS)
 
 src:
 	$(MAKE) -C src
+
+doc:
+	doxygen
 
 tests:
 	$(MAKE) -C tests
