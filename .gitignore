@@ -21,8 +21,8 @@ profile.*
 *.inst.*
 *.pdb
 
-# Ignore executables
-/bin
+# Ignore build files
+/build
 
 # Ignore doc folder
 /doc
