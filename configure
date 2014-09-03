@@ -1,0 +1,15 @@
+#!/bin/bash
+HERE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BUILD_DIR="$HERE/build"
+SRC_DIR="$HERE/src"
+DOC_DIR="$HERE/doc"
+
+if ! which cmake >/dev/null 2>&1 ; then
+  echo "ERROR: cmake not found in PATH"
+  exit 1
+fi
+
+mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
+cmake "$SRC_DIR"
+
