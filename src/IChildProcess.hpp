@@ -60,6 +60,11 @@ public:
   typedef std::vector<IProbe*> ProbeVector;
 
   ///
+  /// Returns platform-specific child process executor
+  ///
+  static IChildProcess * Instance();
+
+  ///
   /// Minimal constructor
   ///
   IChildProcess() : 
