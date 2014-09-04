@@ -62,7 +62,7 @@ int ForkExecChild::Create(int argc, char ** argv)
   exe_name_ = argv[1];
 
   // Mark time of child process creation
-  gettimeofday(&start_time_, NULL);
+  runtime_.Start();
 
   pid_ = fork();
   if (pid_ == -1) {
@@ -104,8 +104,7 @@ int ForkExecChild::Create(int argc, char ** argv)
         usleep(freq_);
       }
     }
-    // Mark time of child process completion
-    gettimeofday(&end_time_, NULL);
+    runtime_.Stop();
     DeactivateProbes();
     return retval_;
   }
@@ -123,5 +122,5 @@ void ForkExecChild::PrintSummary()
     (*it)->WriteSummary(cout);
     cout << endl;
   }
-  cout << "Runtime (s): " << runtime() << endl;
+  cout << "Runtime (s): " << runtime().Seconds() << endl;
 }

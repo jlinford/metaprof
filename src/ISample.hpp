@@ -46,6 +46,8 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "Time.hpp"
+
 ///
 /// Base class for samples.
 /// Maintains common fields like the timestamp
@@ -53,15 +55,6 @@
 class ISample
 {
 public:
-
-  ///
-  /// Timestamp the sample on creation
-  ///
-  ISample() {
-    if (gettimeofday(&timestamp, NULL) == -1) {
-      throw std::runtime_error(strerror(errno));
-    }
-  }
 
   ///
   /// Empty destructor
@@ -75,7 +68,7 @@ public:
   virtual std::ostream & Write(std::ostream & os) const = 0;
 
   /// The time this sample instance was created
-  timeval timestamp;
+  TimeStamp timestamp;
 };
 
 #endif /* _ISAMPLE_HPP_ */

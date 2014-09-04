@@ -127,12 +127,10 @@ public:
   }
 
   ///
-  /// Returns child process runtime in seconds
+  /// Returns child process runtime
   ///
-  double runtime() const {
-    timeval diff;
-    timersub(&end_time_, &start_time_, &diff);
-    return (diff.tv_sec * 1e6 + diff.tv_usec) / 1e6;
+  Timer const & runtime() const {
+    return runtime_;
   }
 
   ///
@@ -198,11 +196,8 @@ protected:
   /// Child process executable name
   std::string exe_name_;
 
-  /// Time of child process creation
-  timeval start_time_;
-
-  /// Time parent process saw child process termination
-  timeval end_time_;
+  /// Child process runtime
+  Timer runtime_;
 
   /// Child process return value
   int retval_;

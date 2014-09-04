@@ -60,11 +60,7 @@ public:
     max_num_threads_(0),
     max_vsize_(0),
     max_rss_(0)
-  {
-    if (gettimeofday(&t0_, NULL) == -1) {
-      throw std::runtime_error(strerror(errno));
-    }
-  }
+  { }
 
   ///
   /// Empty destructor
@@ -97,7 +93,7 @@ private:
   long max_rss_;              ///< Highest measured number of pages process has in real memory
 
   /// First known time for timestamp adjustment
-  timeval t0_;
+  TimeStamp t0_;
 
   /// Contents of /proc/[pid]/stat when probe was activated
   StatRecord initial_stat_;

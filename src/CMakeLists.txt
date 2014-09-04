@@ -88,6 +88,8 @@ check_include_file ("time.h"     HAVE_TIME_H)
 check_function_exists (fork   HAVE_FORK)
 check_function_exists (execvp HAVE_EXECVP)
 check_function_exists (usleep HAVE_USLEEP)
+check_function_exists (gettimeofday HAVE_GETTIMEOFDAY)
+check_function_exists (clock_gettime HAVE_CLOCK_GETTIME)
 
 configure_file (
   "${PROJECT_SOURCE_DIR}/config.h.in"

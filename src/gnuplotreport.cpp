@@ -110,7 +110,7 @@ static void WriteProcStatHeaders(ostream & os)
 }
 
 
-static void WriteGnuplotRecord(ostream & os, timeval t0,
+static void WriteGnuplotRecord(ostream & os, Time const & t0,
     StatRecord const & initial_stat, ProcStatSample const & s)
 {
   static long PAGE_SIZE = sysconf(_SC_PAGESIZE);
@@ -120,13 +120,8 @@ static void WriteGnuplotRecord(ostream & os, timeval t0,
   unsigned long code_size = initial_stat.endcode - initial_stat.startcode;
   unsigned long data_size = initial_stat.end_data - initial_stat.start_data;
 
-  // Adjust timestamp to start at program launch
-  timeval dt;
-  timersub(&s.timestamp, &t0, &dt);
-  double ts = (dt.tv_sec * 1e6 + dt.tv_usec) / 1e6;
-
   // NOTE: Must match order of PROCSTAT_FIELD_NAMES above
-  os << ts << d;
+  os << (s.timestamp - t0).Seconds() << d;
   os << (s.vsize / 1024) << d;
   os << (s.rss * PAGE_SIZE / 1024) << d;
   os << s.minflt << d;
@@ -204,8 +199,8 @@ static void UpdateProcStatReport(string const & fname)
   string exe_name(buff);
 
   // Get initial timestamp and stat record
-  timeval t0;
-  is.read((char*)&t0, sizeof(timeval));
+  Time t0;
+  is.read((char*)&t0, sizeof(Time));
 
   // Get initial stat record
   StatRecord initial_stat;
@@ -218,7 +213,7 @@ static void UpdateProcStatReport(string const & fname)
   ProcStatSample sample;
   while (is) {
     is.read((char*)&sample, sizeof(ProcStatSample));
-    WriteGnuplotRecord(os, t0, initial_stat, sample);
+//    WriteGnuplotRecord(os, t0, initial_stat, sample);
   }
 
   WriteGnuplotScript(exe_name, fname);
