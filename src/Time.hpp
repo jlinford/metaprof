@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * Timer and Timestamp declaration
+ * Cross platform timer implementation
  *
  * @copyright BSD
  * @section LICENSE
@@ -191,10 +191,6 @@ public:
 
   double Seconds() const {
     return elapsed_.Seconds();
-  }
-
-  Time const & elapsed() const {
-    return elapsed_;
   }
 
 private:
