@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * ProcStatProbe member definitions.
+ * GnuplotReport definition
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,64 +36,58 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#include <iostream>
-#include <sstream>
-#include <cstdio>
+
+#include <cstdlib>
 
 #include "IChildProcess.hpp"
-#include "ProcStatProbe.hpp"
-#include "ProcStatSample.hpp"
+#include "ISample.hpp"
+#include "GnuplotReport.hpp"
 
 using namespace std;
 
-
-void ProcStatProbe::Activate()
+void GnuplotReport::Initialize()
 {
-  IProbe::Activate();
-  initial_stat_.Read(proc_->pid());
-
-  // Start by recording some initial data
-  string const & exe_name = proc_->exe_name();
-  size_t exe_name_len = exe_name.length();
-  sample_stream_.write((char const *)&exe_name_len, sizeof(size_t));
-  sample_stream_.write(exe_name.c_str(), exe_name.size());
-  sample_stream_.write((char const *)&t0_, sizeof(timeval));
-  sample_stream_.write((char const *)&initial_stat_, sizeof(StatRecord));
+  if (!os.is_open()) {
+    string const fname = proc_->BuildFilename("dat", name_.c_str());
+    os.open(fname.c_str());
+    if (!os) {
+      cerr << "Failed to open '" << fname << "' for write" << endl;
+      exit(EXIT_FAILURE);
+    }
+  }
 }
 
-
-void ProcStatProbe::Measure()
+void GnuplotReport::Update(IProbe * probe)
 {
-  StatRecord stat;
-  stat.Read(proc_->pid());
+  static bool first_write = true;
 
-  ProcStatSample sample(stat);
+  IProbe::SampleBuffer const & samples = probe->samples();
 
-  max_minflt_ = max(sample.minflt, max_minflt_);
-  max_majflt_ = max(sample.majflt, max_majflt_);
-  max_num_threads_ = max(sample.num_threads, max_num_threads_);
-  max_vsize_ = max(sample.vsize, max_vsize_);
-  max_rss_ = max(sample.rss, max_rss_);
+  for (int i=0; i<samples.size(); ++i) {
+    ISample::FieldVector fields = samples[i]->PackageFields();
 
-  RecordSample(sample);
+    if (first_write) {
+      // Write headers on first write
+      os << "# ";
+      for (ISample::FieldVector::iterator it = fields.begin(); it != fields.end(); it++) {
+        string const & field_name = it->first;
+        os << field_name << " ";
+      }
+      os << endl;
+      first_write = false;
+    } // first write
+
+    for (ISample::FieldVector::iterator it = fields.begin(); it != fields.end(); it++) {
+      string const & value = it->second;
+      os << value << " ";
+    }
+    os << endl;
+  } // has_samples
 }
 
-
-ostream & ProcStatProbe::WriteSummary(ostream & os) const
+void GnuplotReport::Finalize()
 {
-  /// Page size in bytes
-  static long const PAGE_SIZE = sysconf(_SC_PAGESIZE);
-
-  unsigned long code_size = initial_stat_.endcode - initial_stat_.startcode;
-  unsigned long data_size = initial_stat_.end_data - initial_stat_.start_data;
-
-  os << "Max Threads:      " << max_num_threads_ << '\n';
-  os << "Max Major Faults: " << max_majflt_ << '\n';
-  os << "Max Minor Faults: " << max_minflt_ << '\n';
-  os << "Code Size (b):    " << code_size << '\n';
-  os << "Data Size (b):    " << data_size << '\n';
-  os << "Max RSS (kb):     " << (max_rss_ * PAGE_SIZE / 1024) << '\n';
-  os << "Max Vmem (kb):    " << (max_vsize_ / 1024);
-
-  return os;
+  if (os.is_open()) {
+    os.close();
+  }
 }

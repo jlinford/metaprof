@@ -44,9 +44,6 @@
 #include <sstream>
 #include <string>
 
-#include "ISample.hpp"
-
-
 // Forward declaration
 class IChildProcess;
 
@@ -59,13 +56,14 @@ class IProbe
 public:
 
   ///
-  /// Minimal constructor
+  /// A collection of samples
   ///
-  IProbe(IChildProcess * const proc, std::string const & name) :
-    proc_(proc),
-    name_(name),
-    sample_count_(0)
-  { }
+  typedef std::vector<class ISample*> SampleBuffer;
+
+  ///
+  /// Constructor
+  ///
+  IProbe(IChildProcess * const proc, std::string const & name);
 
   ///
   /// Empty destructor
@@ -80,16 +78,17 @@ public:
   }
 
   ///
+  /// samples_ accessor
+  ///
+  SampleBuffer const & samples() const {
+    return samples_;
+  }
+
+  ///
   /// Initializes and enables the probe
   /// In current design this should only happen once
   ///
-  virtual void Activate();
-
-  ///
-  /// Disables the probe
-  /// In current design this should only happen once
-  ///
-  virtual void Deactivate();
+  virtual void Initialize() = 0;
 
   ///
   /// Takes a sample of the probed metrics
@@ -97,25 +96,19 @@ public:
   virtual void Measure() = 0;
 
   ///
-  /// Writes a short summary of data gathered so far
-  /// @param os The stream to write to
-  /// @return The stream 'os' after writing
+  /// Flushes buffered samples from memory
   ///
-  virtual std::ostream & WriteSummary(std::ostream & os) const = 0;
+  virtual void Flush() {
+    samples_.clear();
+  }
+
+  ///
+  /// Disables the probe
+  /// In current design this should only happen once
+  ///
+  virtual void Finalize() = 0;
 
 protected:
-
-  ///
-  /// Records a sample, possibly flushing to disk
-  /// @param sample sample to record
-  ///
-  virtual void RecordSample(ISample const & sample) {
-    if (!sample.Write(sample_stream_)) {
-      std::ostringstream buff;
-      buff << "Failed to write to " << sample_stream_fname_;
-      throw std::runtime_error(buff.str());
-    }
-  }
 
   /// The process being probed
   IChildProcess * const proc_;
@@ -123,14 +116,8 @@ protected:
   /// Probe name, e.g. "ProcStat"
   std::string const name_;
 
-  /// Number of samples recorded so far
-  size_t sample_count_;
-
-  /// Name of samples file
-  std::string sample_stream_fname_;
-
-  /// Store samples in a file buffer
-  std::ofstream sample_stream_;
+  /// In-memory sample buffer
+  SampleBuffer samples_;
 };
 
 #endif /* _IPROBE_HPP_ */

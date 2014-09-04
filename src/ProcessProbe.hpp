@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * Base class for samples.
+ * ProcessProbe declaration.
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,44 +36,54 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#ifndef _ISAMPLE_HPP_
-#define _ISAMPLE_HPP_
+#ifndef PROCESSPROBE_HPP_
+#define PROCESSPROBE_HPP_
 
-#include <sstream>
-#include <vector>
-#include <string>
-
-#include "Time.hpp"
+#include "Statistics.hpp"
+#include "IProbe.hpp"
 
 ///
-/// Base class for samples.
-/// Maintains common fields like the timestamp
+/// Measures process resource usage
 ///
-struct ISample
+class ProcessProbe : public IProbe
 {
+public:
 
-  typedef std::pair<std::string, std::string> SampleField;
-  typedef std::vector<SampleField> FieldVector;
-
-  template < typename T >
-  SampleField PackageField(std::string const & name, T const & value) {
-    std::ostringstream buff;
-    buff << value;
-    return SampleField(name, buff.str());
-  }
+  ///
+  /// Initializes the probe
+  /// @param proc The process being probed
+  ///
+  ProcessProbe(IChildProcess * const proc) :
+    IProbe(proc, "process")
+  { }
 
   ///
   /// Empty destructor
   ///
-  virtual ~ISample() { }
+  virtual ~ProcessProbe() { }
 
-  //
-  // Returns all fields as labeled string data
-  //
-  virtual FieldVector PackageFields() = 0;
+  ///
+  /// Empty
+  ///
+  virtual void Initialize() { }
 
-  /// The time this sample instance was created
-  TimeStamp timestamp_;
+  ///
+  /// Take a sample
+  ///
+  virtual void Measure();
+
+  ///
+  /// Empty
+  ///
+  virtual void Finalize() { }
+
+private:
+
+  Statistics minor_falt_;   ///< Minor fault statistics (no disk access)
+  Statistics major_falt_;   ///< Major fault statistics (disk accessed)
+  Statistics num_threads_;  ///< Number of threads in process
+  Statistics vmem_;         ///< Virtual memory statistics
+  Statistics rss_;          ///< Resident set size statistics
 };
 
-#endif /* _ISAMPLE_HPP_ */
+#endif /* PROCESSPROBE_HPP_ */

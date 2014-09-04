@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * Base class for samples.
+ * Statistics declaration.
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,44 +36,53 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#ifndef _ISAMPLE_HPP_
-#define _ISAMPLE_HPP_
+#ifndef STATISTICS_HPP_
+#define STATISTICS_HPP_
 
-#include <sstream>
-#include <vector>
-#include <string>
 
-#include "Time.hpp"
-
-///
-/// Base class for samples.
-/// Maintains common fields like the timestamp
-///
-struct ISample
+class Statistics
 {
+public:
 
-  typedef std::pair<std::string, std::string> SampleField;
-  typedef std::vector<SampleField> FieldVector;
+  Statistics() :
+    count_(0), sum_(0), min_(0), max_(0)
+  { }
 
-  template < typename T >
-  SampleField PackageField(std::string const & name, T const & value) {
-    std::ostringstream buff;
-    buff << value;
-    return SampleField(name, buff.str());
+  void Update(double value) {
+    ++count_;
+    sum_ += value;
+    min_ = std::min(min_, value);
+    max_ = std::max(max_, value);
   }
 
-  ///
-  /// Empty destructor
-  ///
-  virtual ~ISample() { }
+  size_t count() const {
+    return count_;
+  }
 
-  //
-  // Returns all fields as labeled string data
-  //
-  virtual FieldVector PackageFields() = 0;
+  double sum() const {
+    return sum_;
+  }
 
-  /// The time this sample instance was created
-  TimeStamp timestamp_;
+  double min() const {
+    return min_;
+  }
+
+  double max() const {
+    return max_;
+  }
+
+  double mean() const {
+    return sum_ / count_;
+  }
+
+private:
+
+  size_t count_;
+  double sum_;
+  double min_;
+  double max_;
+
 };
 
-#endif /* _ISAMPLE_HPP_ */
+
+#endif /* STATISTICS_HPP_ */

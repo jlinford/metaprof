@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * 'quantify' program entry point.
+ * 'metaprof' program entry point.
  *
  * @copyright BSD
  * @section LICENSE
@@ -38,13 +38,15 @@
  */
 #include <iostream>
 
-#include "ForkExecChild.hpp"
-#include "ProcStatProbe.hpp"
+#include "IChildProcess.hpp"
+#include "ProcessProbe.hpp"
+#include "DeliminatedReport.hpp"
+#include "GnuplotReport.hpp"
 
 using namespace std;
 
 ///
-/// Entry point for *quantify* program
+/// Entry point for *metaprof* program
 /// @param argc Command line argument count
 /// @param argv Command line arguments
 ///
@@ -55,24 +57,13 @@ int main(int argc, char ** argv)
     return 0;
   }
 
-  // Use fork/exec to create the child process
-  // Other child process launchers may be added in future...
-  IChildProcess * child = new ForkExecChild;
-
-  // Sample /proc/[pid]/stat to get resource usage
-  // Other probes may be added in future...
-  child->AddProbe<ProcStatProbe>();
+  IChildProcess * child = IChildProcess::Instance();
+  IProbe * procProbe = new ProcessProbe(child);
+  IReport * csvReport = new DeliminatedReport(child, ",");
+  IReport * gnuplotReport = new GnuplotReport(child);
 
   // Run the process to completion
-  int retval = child->Create(argc, argv);
+  int retval = child->Run(argc, argv);
 
-  // Report data gathered via sampling
-//  child->ReportToCSVFile();
-//  child->ReportToGnuplot();
-
-  // Show summary on stdout
-  child->PrintSummary();
-
-  // Peace out
   return retval;
 }

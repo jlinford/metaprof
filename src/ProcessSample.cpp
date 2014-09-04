@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * Base class for samples.
+ * ProcessSample definition
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,44 +36,41 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#ifndef _ISAMPLE_HPP_
-#define _ISAMPLE_HPP_
+#include <unistd.h>
+#include "ProcessSample.hpp"
 
-#include <sstream>
-#include <vector>
-#include <string>
+using namespace std;
 
-#include "Time.hpp"
+/// First known time for timestamp adjustment
+static TimeStamp t0;
 
-///
-/// Base class for samples.
-/// Maintains common fields like the timestamp
-///
-struct ISample
+// System page size in bytes
+static long PAGE_SIZE = sysconf(_SC_PAGESIZE);
+
+/// Sytem ticks per second
+static long TICKS_PER_SECOND = sysconf(_SC_CLK_TCK);
+
+
+ISample::FieldVector ProcessSample::PackageFields()
 {
+  FieldVector fields;
+  fields.push_back(PackageField("Timestamp (s)", (timestamp_ - t0).Seconds()));
+  fields.push_back(PackageField("VMemory Size (kb)", vsize / 1024));
+  fields.push_back(PackageField("RSS (kb)", (rss * PAGE_SIZE / 1024)));
+  fields.push_back(PackageField("Minor Page Faults", minflt));
+  fields.push_back(PackageField("Major Page Faults", majflt));
+  fields.push_back(PackageField("User Time (s)", utime * TICKS_PER_SECOND));
+  fields.push_back(PackageField("System Time (s)", stime * TICKS_PER_SECOND));
+  fields.push_back(PackageField("Aggregated I/O Delay Time (s)", delayacct_blkio_ticks * TICKS_PER_SECOND));
+  fields.push_back(PackageField("Code Size (b)", code_size));
+  fields.push_back(PackageField("Data Size (b)", data_size));
+  fields.push_back(PackageField("Threads", num_threads));
+  fields.push_back(PackageField("Processor", processor));
+  fields.push_back(PackageField("State", state));
+  fields.push_back(PackageField("Child Minor Faults", cminflt));
+  fields.push_back(PackageField("Child Major Faults", cmajflt));
+  fields.push_back(PackageField("Child User Time (s)", cutime * TICKS_PER_SECOND));
+  fields.push_back(PackageField("Child System Time (s)", cstime * TICKS_PER_SECOND));
+  return fields;
+}
 
-  typedef std::pair<std::string, std::string> SampleField;
-  typedef std::vector<SampleField> FieldVector;
-
-  template < typename T >
-  SampleField PackageField(std::string const & name, T const & value) {
-    std::ostringstream buff;
-    buff << value;
-    return SampleField(name, buff.str());
-  }
-
-  ///
-  /// Empty destructor
-  ///
-  virtual ~ISample() { }
-
-  //
-  // Returns all fields as labeled string data
-  //
-  virtual FieldVector PackageFields() = 0;
-
-  /// The time this sample instance was created
-  TimeStamp timestamp_;
-};
-
-#endif /* _ISAMPLE_HPP_ */

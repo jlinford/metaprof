@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * StatRecord member definition
+ * StatRecord definition
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,11 +36,13 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#include <iostream>
+
+
 #include <sstream>
 #include <cstdio>
 #include <stdexcept>
 
+#include "config.h"
 #include "StatRecord.hpp"
 
 using namespace std;
@@ -49,6 +51,7 @@ using namespace std;
 
 void StatRecord::Read(int pid)
 {
+#ifdef HAVE_PROCFS_STATM
   // The format string must match the order and number of fields in /proc/[pid]/stat
   static char const * const FORMAT = "%d %s %c %d %d %d %d %d %lu %lu %lu %lu %lu %lu %lu %ld %ld %ld %ld %ld %ld %lu %lu %ld %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu %d %d %lu %lu %llu %lu %ld %lu %lu %lu %lu %lu %lu %lu %d";
   char fname[256];
@@ -116,5 +119,8 @@ void StatRecord::Read(int pid)
           &exit_code);
 
   fclose(fptr);
+#else
+  throw runtime_error("/proc/[pid]/statm file not found");
+#endif
 }
 

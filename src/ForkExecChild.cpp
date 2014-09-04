@@ -56,7 +56,8 @@
 
 using namespace std;
 
-int ForkExecChild::Create(int argc, char ** argv)
+
+int ForkExecChild::Run(int argc, char ** argv)
 {
   // Record name of child executable as seen on command line
   exe_name_ = argv[1];
@@ -76,11 +77,11 @@ int ForkExecChild::Create(int argc, char ** argv)
     }
     return retval_;
   } else {
-    // Nasty hack: Skip the first sample
+    // Nasty hack: Skip the first sample before initializing
     usleep(freq_);
+    Initialize();
 
     // Parent process waits for child to complete
-    ActivateProbes();
     while (true) {
       Measure();
       int status;
@@ -105,7 +106,7 @@ int ForkExecChild::Create(int argc, char ** argv)
       }
     }
     runtime_.Stop();
-    DeactivateProbes();
+    Finalize();
     return retval_;
   }
   // Something unexpected happened
@@ -113,14 +114,4 @@ int ForkExecChild::Create(int argc, char ** argv)
   throw runtime_error("Unexpected exit path from ForkExecChild::Create");
   // Keep the compiler happy
   return retval_;
-}
-
-void ForkExecChild::PrintSummary()
-{
-  // Print probe summaries
-  for(ProbeVector::const_iterator it=probes_.begin(); it!=probes_.end(); it++) {
-    (*it)->WriteSummary(cout);
-    cout << endl;
-  }
-  cout << "Runtime (s): " << runtime().Seconds() << endl;
 }

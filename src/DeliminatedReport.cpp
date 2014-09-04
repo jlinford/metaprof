@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * ProcStatProbe declaration.
+ * DeliminatedReport definition
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,68 +36,57 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#ifndef _PROCSTATPROBE_HPP_
-#define _PROCSTATPROBE_HPP_
 
-#include "StatRecord.hpp"
-#include "IProbe.hpp"
+#include <cstdlib>
 
-///
-/// A probe that uses /proc/[pid]/stat to get resource usage
-///
-class ProcStatProbe : public IProbe
+#include "IChildProcess.hpp"
+#include "ISample.hpp"
+#include "DeliminatedReport.hpp"
+
+using namespace std;
+
+void DeliminatedReport::Initialize()
 {
-public:
+  if (!os.is_open()) {
+    string const fname = proc_->BuildFilename("csv", name_.c_str());
+    os.open(fname.c_str());
+    if (!os) {
+      cerr << "Failed to open '" << fname << "' for write" << endl;
+      exit(EXIT_FAILURE);
+    }
+  }
+}
 
-  ///
-  /// Initializes the probe and marks creation time
-  /// @param proc The process being probed
-  ///
-  ProcStatProbe(IChildProcess * const proc) :
-    IProbe(proc, "ProcStat"),
-    max_minflt_(0),
-    max_majflt_(0),
-    max_num_threads_(0),
-    max_vsize_(0),
-    max_rss_(0)
-  { }
+void DeliminatedReport::Update(IProbe * probe)
+{
+  static bool first_write = true;
 
-  ///
-  /// Empty destructor
-  ///
-  virtual ~ProcStatProbe() { }
+  IProbe::SampleBuffer const & samples = probe->samples();
 
-  ///
-  /// Initializes the sample output stream
-  ///
-  virtual void Activate();
+  for (int i=0; i<samples.size(); ++i) {
+    ISample::FieldVector fields = samples[i]->PackageFields();
 
-  ///
-  /// Samples /proc/[pid]/stat
-  ///
-  virtual void Measure();
+    if (first_write) {
+      // Write headers on first write
+      for (ISample::FieldVector::iterator it = fields.begin(); it != fields.end(); it++) {
+        string const & field_name = it->first;
+        os << field_name << delim_;
+      }
+      os << endl;
+      first_write = false;
+    } // first write
 
-  ///
-  /// Writes a short summary of data gathered so far
-  /// @param os The stream to write to
-  /// @return The stream 'os' after writing
-  ///
-  virtual std::ostream & WriteSummary(std::ostream & os) const;
+    for (ISample::FieldVector::iterator it = fields.begin(); it != fields.end(); it++) {
+      string const & value = it->second;
+      os << value << delim_;
+    }
+    os << endl;
+  } // has_samples
+}
 
-private:
-
-  unsigned long max_minflt_;  ///< Highest measured minor faults not requiring page load from disk
-  unsigned long max_majflt_;  ///< Highest measured major faults requiring page load from disk
-  long max_num_threads_;      ///< Highest measured number of threads in the process
-  unsigned long max_vsize_;   ///< Highest measured virtual memory size in bytes
-  long max_rss_;              ///< Highest measured number of pages process has in real memory
-
-  /// First known time for timestamp adjustment
-  TimeStamp t0_;
-
-  /// Contents of /proc/[pid]/stat when probe was activated
-  StatRecord initial_stat_;
-
-};
-
-#endif /* _PROCSTATPROBE_HPP_ */
+void DeliminatedReport::Finalize()
+{
+  if (os.is_open()) {
+    os.close();
+  }
+}

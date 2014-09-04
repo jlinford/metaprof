@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * ProcStatSample declaration.
+ * ProcessSample declaration.
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,26 +36,21 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#ifndef _PROCSTATSAMPLE_HPP_
-#define _PROCSTATSAMPLE_HPP_
-
-#include <iostream>
+#ifndef PROCESSSAMPLE_HPP_
+#define PROCESSSAMPLE_HPP_
 
 #include "StatRecord.hpp"
 #include "ISample.hpp"
 
 ///
+/// Data measured from process
 ///
-/// Data measured from /proc/[pid]/stat
-/// See man(5) proc for details
-/// To save space, only fields we care about are recorded
-///
-struct ProcStatSample : public ISample
+struct ProcessSample : public ISample
 {
   ///
   /// Empty constructor
   ///
-  ProcStatSample() :
+  ProcessSample() :
     state(0),
     minflt(0),
     cminflt(0),
@@ -69,13 +64,15 @@ struct ProcStatSample : public ISample
     vsize(0),
     rss(0),
     processor(-1),
-    delayacct_blkio_ticks(0)
+    delayacct_blkio_ticks(0),
+    code_size(0),
+    data_size(0)
   { }
 
   ///
   /// Initializer
   ///
-  ProcStatSample(StatRecord const & s) :
+  ProcessSample(StatRecord const & s) :
     state(s.state),
     minflt(s.minflt),
     cminflt(s.cminflt),
@@ -89,31 +86,29 @@ struct ProcStatSample : public ISample
     vsize(s.vsize),
     rss(s.rss),
     processor(s.processor),
-    delayacct_blkio_ticks(s.delayacct_blkio_ticks)
+    delayacct_blkio_ticks(s.delayacct_blkio_ticks),
+    code_size(s.endcode - s.startcode),
+    data_size(s.end_data - s.start_data)
   { }
 
-  ///
-  /// Write all fields to the specified stream in unformated binary
-  /// @param os Stream to write to
-  ///
-  virtual std::ostream & Write(std::ostream & os) const {
-    return os.write((char const*)this, sizeof(ProcStatSample));
-  }
+  FieldVector PackageFields();
 
-  char state;                 ///< Process state
-  unsigned long minflt;       ///< Minor faults not requiring page load from disk
-  unsigned long cminflt;      ///< Minor faults made by process's children
-  unsigned long majflt;       ///< Major faults requiring page load from disk
-  unsigned long cmajflt;      ///< Major faults made by process's children
-  unsigned long utime;        ///< Clock ticks spent scheduled in user mode
-  unsigned long stime;        ///< Clock ticks spent scheduled in kernel mode
-  long cutime;                ///< Clock ticks process's children spent in user mode
-  long cstime;                ///< Clock ticks process's children spent in kernel mode
-  long num_threads;           ///< Number of threads in the process
-  unsigned long vsize;        ///< Virtual memory size in bytes
-  long rss;                   ///< Number of pages process has in real memory
-  int processor;              ///< CPU number last executed on
-  unsigned long long delayacct_blkio_ticks;   ///< Aggregated block I/O delays in clock ticks
+  char state;                ///< Process state
+  unsigned long minflt;      ///< Minor faults not requiring page load from disk
+  unsigned long cminflt;     ///< Minor faults made by process's children
+  unsigned long majflt;      ///< Major faults requiring page load from disk
+  unsigned long cmajflt;     ///< Major faults made by process's children
+  unsigned long utime;       ///< Clock ticks spent scheduled in user mode
+  unsigned long stime;       ///< Clock ticks spent scheduled in kernel mode
+  long cutime;               ///< Clock ticks process's children spent in user mode
+  long cstime;               ///< Clock ticks process's children spent in kernel mode
+  long num_threads;          ///< Number of threads in the process
+  unsigned long vsize;       ///< Virtual memory size in bytes
+  long rss;                  ///< Number of pages process has in real memory
+  int processor;             ///< CPU number last executed on
+  unsigned long long delayacct_blkio_ticks;  ///< Aggregated block I/O delays in clock ticks
+  unsigned long code_size;   ///< Size of program code in bytes
+  unsigned long data_size;   ///< Size of program data in bytes
 };
 
 #endif /* _PROCSTATSAMPLE_HPP_ */

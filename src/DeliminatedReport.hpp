@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * Base class for samples.
+ * DeliminatedReport declaration
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,44 +36,57 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#ifndef _ISAMPLE_HPP_
-#define _ISAMPLE_HPP_
+#ifndef DELIMINATEDREPORT_HPP_
+#define DELIMINATEDREPORT_HPP_
 
-#include <sstream>
-#include <vector>
-#include <string>
-
-#include "Time.hpp"
+#include "IReport.hpp"
 
 ///
-/// Base class for samples.
-/// Maintains common fields like the timestamp
+/// Creates a deliminated text file report, e.g. a CSV file
 ///
-struct ISample
+class DeliminatedReport : public IReport
 {
+public:
 
-  typedef std::pair<std::string, std::string> SampleField;
-  typedef std::vector<SampleField> FieldVector;
+  ///
+  /// Initializes the report
+  /// @param proc The process being reported on
+  ///
+  DeliminatedReport(IChildProcess * const proc, std::string const & delim) :
+    IReport(proc, "deliminated"), delim_(delim)
+  { }
 
-  template < typename T >
-  SampleField PackageField(std::string const & name, T const & value) {
-    std::ostringstream buff;
-    buff << value;
-    return SampleField(name, buff.str());
+  ///
+  /// Destructor
+  ///
+  virtual ~DeliminatedReport() {
+    Finalize();
   }
 
   ///
-  /// Empty destructor
+  /// Opens the report file for writing
   ///
-  virtual ~ISample() { }
+  virtual void Initialize();
 
-  //
-  // Returns all fields as labeled string data
-  //
-  virtual FieldVector PackageFields() = 0;
+  ///
+  /// Updates the report with data taken from a probe
+  /// @param probe Probe to read data from
+  ///
+  virtual void Update(IProbe * probe);
 
-  /// The time this sample instance was created
-  TimeStamp timestamp_;
+  ///
+  /// Closes the report file
+  ///
+  virtual void Finalize();
+
+protected:
+
+  /// Field deliminator
+  std::string const delim_;
+
+  /// Output file stream
+  std::ofstream os;
+
 };
 
-#endif /* _ISAMPLE_HPP_ */
+#endif /* DELIMINATEDREPORT_HPP_ */

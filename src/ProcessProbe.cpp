@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * Base class for samples.
+ * ProcessProbe definition
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,44 +36,28 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#ifndef _ISAMPLE_HPP_
-#define _ISAMPLE_HPP_
 
-#include <sstream>
-#include <vector>
-#include <string>
+#include "config.h"
+#include "StatRecord.hpp"
+#include "ProcessProbe.hpp"
 
-#include "Time.hpp"
+using namespace std;
 
-///
-/// Base class for samples.
-/// Maintains common fields like the timestamp
-///
-struct ISample
+
+void ProcessProbe::Measure()
 {
+#ifdef HAVE_PROCFS_STATM
+  StatRecord stat;
+  stat.Read(proc_->pid());
 
-  typedef std::pair<std::string, std::string> SampleField;
-  typedef std::vector<SampleField> FieldVector;
+  minor_falt_.Update(stat.minflt);
+  major_falt_.Update(stat.majflt);
+  num_threads_.Update(stat.num_threads);
+  vmem_.Update(stat.vsize);
+  rss_.Update(stat.rss);
 
-  template < typename T >
-  SampleField PackageField(std::string const & name, T const & value) {
-    std::ostringstream buff;
-    buff << value;
-    return SampleField(name, buff.str());
-  }
-
-  ///
-  /// Empty destructor
-  ///
-  virtual ~ISample() { }
-
-  //
-  // Returns all fields as labeled string data
-  //
-  virtual FieldVector PackageFields() = 0;
-
-  /// The time this sample instance was created
-  TimeStamp timestamp_;
-};
-
-#endif /* _ISAMPLE_HPP_ */
+  samples_.push_back(new ProcessSample(stat));
+#else
+  throw runtime_error("No known method for reading process statistics!");
+#endif
+}

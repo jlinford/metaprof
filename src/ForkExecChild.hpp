@@ -56,16 +56,11 @@ public:
   virtual ~ForkExecChild() { }
   
   ///
-  /// Use fork/exec to launch the child process
+  /// Use fork/exec to run the child process
   /// @param argc Unmodified command line argument count
   /// @param argv Unmodified command line arguments
   ///
-  int Create(int argc, char ** argv);
-
-  ///
-  /// Prints a short summary of each probe and child process runtime on stdout
-  ///
-  virtual void PrintSummary();
+  int Run(int argc, char ** argv);
 };
 
 

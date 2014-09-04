@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * Base class for samples.
+ * IReport definition.
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,44 +36,14 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#ifndef _ISAMPLE_HPP_
-#define _ISAMPLE_HPP_
 
-#include <sstream>
-#include <vector>
-#include <string>
+#include "IChildProcess.hpp"
 
-#include "Time.hpp"
+using namespace std;
 
-///
-/// Base class for samples.
-/// Maintains common fields like the timestamp
-///
-struct ISample
+IReport::IReport(IChildProcess * const proc, string const & name) :
+  proc_(proc), name_(name)
 {
-
-  typedef std::pair<std::string, std::string> SampleField;
-  typedef std::vector<SampleField> FieldVector;
-
-  template < typename T >
-  SampleField PackageField(std::string const & name, T const & value) {
-    std::ostringstream buff;
-    buff << value;
-    return SampleField(name, buff.str());
-  }
-
-  ///
-  /// Empty destructor
-  ///
-  virtual ~ISample() { }
-
-  //
-  // Returns all fields as labeled string data
-  //
-  virtual FieldVector PackageFields() = 0;
-
-  /// The time this sample instance was created
-  TimeStamp timestamp_;
-};
-
-#endif /* _ISAMPLE_HPP_ */
+  // Friend access
+  proc_->reports_.push_back(this);
+}

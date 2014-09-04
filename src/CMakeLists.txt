@@ -43,41 +43,40 @@ project (metaprof)
 set (metaprof_VERSION_MAJOR 0)
 set (metaprof_VERSION_MINOR 1)
 
-#
-# libmetaprof.a
-# 
-add_library (metaprof STATIC
-             ForkExecChild.cpp
-             IProbe.cpp
-             ProcStatProbe.cpp
-             StatRecord.cpp)
 
 #
-# quantify
+# metaprof
 #
-add_executable (quantify quantify.cpp)
-target_link_libraries (quantify metaprof)
-install (TARGETS quantify DESTINATION bin)
-
-#
-# csvreport
-#
-add_executable (csvreport csvreport.cpp)
-target_link_libraries (csvreport metaprof)
-install (TARGETS csvreport DESTINATION bin)
-
-#
-# gnuplotreport
-#
-add_executable (gnuplotreport gnuplotreport.cpp)
-target_link_libraries (gnuplotreport metaprof)
-install (TARGETS gnuplotreport DESTINATION bin)
+add_executable (metaprof 
+                metaprof.cpp
+                DeliminatedReport.cpp
+                ForkExecChild.cpp
+                GnuplotReport.cpp
+                IChildProcess.cpp
+                IProbe.cpp
+                IReport.cpp
+                ProcessProbe.cpp
+                ProcessSample.cpp
+                StatRecord.cpp)
+install (TARGETS metaprof DESTINATION bin)
 
 #
 # Configure a header file to pass some of the CMake settings to the source code
 #
 include (CheckFunctionExists)
 include (CheckIncludeFile)
+
+if (EXISTS "/proc" AND IS_DIRECTORY "/proc")
+set (HAVE_PROCFS 1)
+else()
+set (HAVE_PROCFS 0)
+endif()
+
+if (EXISTS "/proc/self/statm")
+set (HAVE_PROCFS_STATM 1)
+else()
+set (HAVE_PROCFS_STATM 0)
+endif()
 
 check_include_file ("unistd.h" HAVE_UNISTD_H)
 check_include_file ("errno.h"  HAVE_ERRNO_H)

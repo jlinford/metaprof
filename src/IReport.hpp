@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * Base class for samples.
+ * Base class for reports.
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,44 +36,63 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#ifndef _ISAMPLE_HPP_
-#define _ISAMPLE_HPP_
+#ifndef IREPORT_HPP_
+#define IREPORT_HPP_
 
-#include <sstream>
-#include <vector>
 #include <string>
 
-#include "Time.hpp"
+#include "IProbe.hpp"
+
+// Forward declaration
+class IChildProcess;
 
 ///
-/// Base class for samples.
-/// Maintains common fields like the timestamp
+/// Base class for reports.
 ///
-struct ISample
+class IReport
 {
+public:
 
-  typedef std::pair<std::string, std::string> SampleField;
-  typedef std::vector<SampleField> FieldVector;
-
-  template < typename T >
-  SampleField PackageField(std::string const & name, T const & value) {
-    std::ostringstream buff;
-    buff << value;
-    return SampleField(name, buff.str());
-  }
+  ///
+  /// Constructor
+  ///
+  IReport(IChildProcess * const proc, std::string const & name);
 
   ///
   /// Empty destructor
   ///
-  virtual ~ISample() { }
+  virtual ~IReport() { }
 
-  //
-  // Returns all fields as labeled string data
-  //
-  virtual FieldVector PackageFields() = 0;
+  ///
+  /// name_ accessor
+  ///
+  std::string const & name() const {
+    return name_;
+  }
 
-  /// The time this sample instance was created
-  TimeStamp timestamp_;
+  ///
+  /// Initializes the report
+  virtual void Initialize() = 0;
+
+  ///
+  /// Updates the report with data taken from a probe
+  /// @param probe Probe to read data from
+  ///
+  virtual void Update(IProbe * probe) = 0;
+
+  ///
+  /// Finalizes the report
+  ///
+  virtual void Finalize() = 0;
+
+protected:
+
+  /// The process being probed
+  IChildProcess * const proc_;
+
+  /// Probe name, e.g. "ProcStat"
+  std::string const name_;
 };
 
-#endif /* _ISAMPLE_HPP_ */
+
+#endif /* IREPORT_HPP_ */

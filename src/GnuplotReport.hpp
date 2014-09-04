@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * Base class for samples.
+ * GnuplotReport declaration
  *
  * @copyright BSD
  * @section LICENSE
@@ -36,44 +36,51 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
-#ifndef _ISAMPLE_HPP_
-#define _ISAMPLE_HPP_
+#ifndef GNUPLOTREPORT_HPP_
+#define GNUPLOTREPORT_HPP_
 
-#include <sstream>
-#include <vector>
-#include <string>
+#include "IReport.hpp"
 
-#include "Time.hpp"
-
-///
-/// Base class for samples.
-/// Maintains common fields like the timestamp
-///
-struct ISample
+class GnuplotReport : public IReport
 {
+public:
 
-  typedef std::pair<std::string, std::string> SampleField;
-  typedef std::vector<SampleField> FieldVector;
+  ///
+  /// Initializes the report
+  /// @param proc The process being reported on
+  ///
+  GnuplotReport(IChildProcess * const proc) :
+    IReport(proc, "gnuplot")
+  { }
 
-  template < typename T >
-  SampleField PackageField(std::string const & name, T const & value) {
-    std::ostringstream buff;
-    buff << value;
-    return SampleField(name, buff.str());
+  ///
+  /// Destructor
+  ///
+  virtual ~GnuplotReport() {
+    Finalize();
   }
 
   ///
-  /// Empty destructor
+  /// Opens the output file for writing
   ///
-  virtual ~ISample() { }
+  virtual void Initialize();
 
-  //
-  // Returns all fields as labeled string data
-  //
-  virtual FieldVector PackageFields() = 0;
+  ///
+  /// Updates the report with data taken from a probe
+  /// @param probe Probe to read data from
+  ///
+  virtual void Update(IProbe * probe);
 
-  /// The time this sample instance was created
-  TimeStamp timestamp_;
+  ///
+  /// Closes the output file
+  ///
+  virtual void Finalize();
+
+protected:
+
+  /// Output file stream
+  std::ofstream os;
+
 };
 
-#endif /* _ISAMPLE_HPP_ */
+#endif /* GNUPLOTREPORT_HPP_ */

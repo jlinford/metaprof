@@ -5,7 +5,7 @@
  *
  * @brief
  *
- * Base class for probes.
+ * IProbe definition
  *
  * @copyright BSD
  * @section LICENSE
@@ -37,20 +37,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.**
  */
 
-#include "IProbe.hpp"
 #include "IChildProcess.hpp"
 
 using namespace std;
 
-void IProbe::Activate()
-{
-  static const ios_base::openmode flags = ios_base::binary;
-  sample_stream_fname_ = proc_->BuildFilename(name_.c_str());
-  sample_stream_.open(sample_stream_fname_.c_str(), flags);
-}
 
-void IProbe::Deactivate()
+IProbe::IProbe(IChildProcess * const proc, string const & name) :
+  proc_(proc), name_(name)
 {
-  sample_stream_.close();
-  sample_stream_fname_.clear();
+  // Friend access
+  proc_->probes_.push_back(this);
 }

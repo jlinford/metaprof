@@ -51,9 +51,11 @@ using namespace std;
 
 IChildProcess * IChildProcess::Instance()
 {
+  IChildProcess * child;
 #if defined(HAVE_FORK) && defined(HAVE_EXECVP)
-  return new ForkExecChild;
+  child = new ForkExecChild;
 #else
   throw runtime_error("Can't create child processes on this platform.")
 #endif
+  return child;
 }

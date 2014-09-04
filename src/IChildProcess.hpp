@@ -47,6 +47,8 @@
 #include <string>
 
 #include "IProbe.hpp"
+#include "IReport.hpp"
+#include "Time.hpp"
 
 ///
 /// Base class for child process launchers.
@@ -56,8 +58,15 @@ class IChildProcess
 {
 public:
 
+  /// Friend classes
+  friend class IProbe;
+  friend class IReport;
+
   /// A collection of probes
   typedef std::vector<IProbe*> ProbeVector;
+
+  /// A collection of reports
+  typedef std::vector<IReport*> ReportVector;
 
   ///
   /// Returns platform-specific child process executor
@@ -77,17 +86,6 @@ public:
   /// Empty destructor
   ///
   virtual ~IChildProcess() { }
-
-  ///
-  /// Creates a new probe of the specified type and adds it to the list
-  /// of probes on this process.
-  /// @param ProbeType The type of probe to add, e.g. ProcStatProbe
-  ///
-  template < typename ProbeType >
-  void AddProbe() {
-    IProbe * probe = new ProbeType(this);
-    probes_.push_back(probe);
-  }
 
   ///
   /// probes_ accessor
@@ -141,39 +139,52 @@ public:
   ///
   /// Calls Activate() on all probes attached to the process
   ///
-  virtual void ActivateProbes() {
-    for(ProbeVector::iterator it = probes_.begin(); it != probes_.end(); it++) {
-      (*it)->Activate();
+  virtual void Initialize() {
+    for (ReportVector::iterator it = reports_.begin(); it != reports_.end(); it++) {
+      (*it)->Initialize();
+    }
+    for (ProbeVector::iterator it = probes_.begin(); it != probes_.end(); it++) {
+      (*it)->Initialize();
     }
   }
 
   ///
-  /// Calls Measure() on all probes attached to the process
+  /// Calls Measure() on all probes attached to the process and sends
+  /// data to reports for further processing
   ///
   virtual void Measure() {
-    for(ProbeVector::iterator it = probes_.begin(); it != probes_.end(); it++) {
-      (*it)->Measure();
+    for (ProbeVector::iterator i = probes_.begin(); i != probes_.end(); i++) {
+      IProbe * probe = *i;
+      probe->Measure();
+      for (ReportVector::iterator j = reports_.begin(); j != reports_.end(); j++) {
+        (*j)->Update(probe);
+      }
+      probe->Flush();
     }
   }
 
   ///
   /// Calls Deactivate() on all probes attached to the process
   ///
-  virtual void DeactivateProbes() {
-    for(ProbeVector::iterator it = probes_.begin(); it != probes_.end(); it++) {
-      (*it)->Deactivate();
+  virtual void Finalize() {
+    for (ProbeVector::iterator it = probes_.begin(); it != probes_.end(); it++) {
+      (*it)->Finalize();
+    }
+    for (ReportVector::iterator it = reports_.begin(); it != reports_.end(); it++) {
+      (*it)->Finalize();
     }
   }
 
   ///
   /// Return a filename based on the name of the child process executable
-  /// Filename is exe_name[.tag].ext
+  /// Filename is exe_name.pid.[tag.]ext
   /// @param ext File extension
   /// @param tag Optional tag
   /// @return The filename string
   virtual std::string BuildFilename(char const * ext, char const * tag=NULL) {
     std::ostringstream buff;
     buff << exe_name_.substr(exe_name_.find_last_of("/\\")+1) << ".";
+    buff << pid_ << ".";
     if (tag) {
       buff << tag << ".";
     }
@@ -182,21 +193,19 @@ public:
   }
 
   ///
-  /// Creates the child process using the specified command line arguments
+  /// Runs the child process using the specified command line arguments
   /// @param argc Argument count
   /// @param argv Command line arguments
   ///
-  virtual int Create(int argc, char ** argv) = 0;
-
-  ///
-  /// Prints a short summary of each probe and child process runtime on stdout
-  ///
-  virtual void PrintSummary() = 0;
+  virtual int Run(int argc, char ** argv) = 0;
 
 protected:
 
   /// Resource usage probes
   ProbeVector probes_;
+
+  /// Resource usage reports
+  ReportVector reports_;
 
   /// Child process executable name
   std::string exe_name_;
