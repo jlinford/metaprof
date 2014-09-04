@@ -38,8 +38,10 @@
  */
 
 #include "config.h"
+#include "IChildProcess.hpp"
 #include "StatRecord.hpp"
 #include "ProcessProbe.hpp"
+#include "ProcessSample.hpp"
 
 using namespace std;
 

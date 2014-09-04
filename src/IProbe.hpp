@@ -43,6 +43,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 // Forward declaration
 class IChildProcess;

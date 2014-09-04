@@ -39,6 +39,8 @@
 #ifndef STATISTICS_HPP_
 #define STATISTICS_HPP_
 
+#include <algorithm>
+#include <cstdlib>
 
 class Statistics
 {
